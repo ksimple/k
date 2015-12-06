@@ -1,4 +1,6 @@
-.tscache
-node_modules
-bower_components
+/.tscache
+/npm-debug.log
+/node_modules/
+/bower_components/
+/intermediate/
 

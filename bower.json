@@ -1,14 +1,13 @@
 {
-  "name": "kLayouter",
+  "name": "k",
   "version": "1.0.0",
-  "homepage": "https://github.com/ksimple/kLayouter",
-  "description": "A light layouter of javascript",
+  "homepage": "",
+  "description": "",
   "moduleType": [
     "amd"
   ],
   "keywords": [
-    "javascript",
-    "layout",
+    "javascript"
   ],
   "authors": [
     "Bin Du"
@@ -20,5 +19,8 @@
     "bower_components",
     "test",
     "tests"
-  ]
+  ],
+  "devDependencies": {
+    "jquery": "~2.1.4"
+  }
 }
