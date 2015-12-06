@@ -16,7 +16,14 @@
                     'src/fundamental/DynamicStylesheet.p.ts',
                     'src/fundamental/tail.p.ts',
                 ],
-                dest: 'intermediate/fundamental.ts'
+                dest: 'intermediate/kFundamental.ts'
+            },
+            layouter: {
+                src: [
+                    'src/layouter/head.p.ts',
+                    'src/layouter/tail.p.ts',
+                ],
+                dest: 'intermediate/kLayouter.ts'
             },
         },
         copy: {
@@ -25,7 +32,18 @@
                     {
                         expand: true,
                         cwd: 'intermediate/',
-                        src: ['fundamental.js', 'fundamental.d.ts', 'fundamental.js.map'],
+                        src: ['kFundamental.js', 'kFundamental.d.ts', 'kFundamental.js.map'],
+                        dest: 'build/',
+                        flatten: true,
+                        filter: 'isFile'
+                    }],
+            },
+            layouter: {
+                files: [
+                    {
+                        expand: true,
+                        cwd: 'intermediate/',
+                        src: ['kLayouter.js', 'kLayouter.d.ts', 'kLayouter.js.map'],
                         dest: 'build/',
                         flatten: true,
                         filter: 'isFile'
@@ -34,8 +52,18 @@
         },
         ts: {
             fundamental: {
-                src: ['inc/jquery.d.ts', 'intermediate/fundamental.ts'],
+                src: ['inc/jquery.d.ts', 'intermediate/kFundamental.ts'],
                 // out: 'build/fundamental.js',
+                options: {
+                    target: 'es5',
+                    declaration: true,
+                    removeComments: false,
+                    module: 'amd',
+                },
+            },
+            layouter: {
+                src: ['inc/jquery.d.ts', 'intermediate/kLayouter.ts'],
+                // out: 'build/layouter.js',
                 options: {
                     target: 'es5',
                     declaration: true,
@@ -54,7 +82,8 @@
         uglify: {
             ship: {
                 files: {
-                    'build/fundamental.min.js': ['build/fundamental.js'],
+                    'build/kFundamental.min.js': ['build/kFundamental.js'],
+                    'build/kLayouter.min.js': ['build/kLayouter.js'],
                 },
             },
         },
@@ -66,7 +95,7 @@
                 },
             },
             ship: {
-                src: 'build/fundamental.min.js',
+                src: 'build/',
                 options: {
                     specs: 'test/*.spec.js',
                 },
@@ -96,7 +125,7 @@
         },
     });
 
-    grunt.registerTask('debug', ['concat:fundamental', 'ts:fundamental', 'copy:fundamental']);
+    grunt.registerTask('debug', ['concat:*', 'ts:*', 'copy:*']);
     grunt.registerTask('ship', ['debug', 'uglify:ship']);
     grunt.registerTask('build', ['debug', 'ship']);
     grunt.registerTask('test', ['jasmine:debug', 'jasmine:ship']);
