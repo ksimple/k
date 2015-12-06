@@ -11,5 +11,6 @@ require.config({
 });
 
 require(['jquery', 'kLayouter'], function($, layouter) {
+    var l = new layouter.attach(window);
 });
 

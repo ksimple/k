@@ -1,6 +1,6 @@
 ﻿module.exports = function (grunt) {
     require('load-grunt-tasks')(grunt);
-    grunt.initConfig({
+    var config = {
         pkg: grunt.file.readJSON('package.json'),
         srcFiles: [
             'src/*.ts',
@@ -21,6 +21,8 @@
             layouter: {
                 src: [
                     'src/layouter/head.p.ts',
+                    'src/layouter/Vertical.p.ts',
+                    'src/layouter/Layouter.p.ts',
                     'src/layouter/tail.p.ts',
                 ],
                 dest: 'intermediate/kLayouter.ts'
@@ -32,7 +34,7 @@
                     {
                         expand: true,
                         cwd: 'intermediate/',
-                        src: ['kFundamental.js', 'kFundamental.d.ts', 'kFundamental.js.map'],
+                        src: ['kFundamental.ts', 'kFundamental.js', 'kFundamental.d.ts', 'kFundamental.js.map'],
                         dest: 'build/',
                         flatten: true,
                         filter: 'isFile'
@@ -43,7 +45,7 @@
                     {
                         expand: true,
                         cwd: 'intermediate/',
-                        src: ['kLayouter.js', 'kLayouter.d.ts', 'kLayouter.js.map'],
+                        src: ['kLayouter.ts', 'kLayouter.js', 'kLayouter.d.ts', 'kLayouter.js.map'],
                         dest: 'build/',
                         flatten: true,
                         filter: 'isFile'
@@ -102,17 +104,11 @@
             }
         },
         watch: {
-            concat_fundamental: {
-                files: ['<%= concat.fundamental.src %>'],
-                tasks: ['concat:fundamental']
-            },
-            ts: {
-                files: ['<%= ts.debug.src %>'],
-                tasks: ['uglify:ship', 'jasmine:ship']
-            },
-            uglify: {
-                files: ['<%= ts.debug.out %>'],
-                tasks: ['ts:debug', 'jasmine:ship']
+            configFiles: {
+                files: ['Gruntfile.js'],
+                options: {
+                    reload: true
+                }
             },
             test_debug: {
                 files: ['<%= jasmine.debug.options.specs %>'],
@@ -123,8 +119,45 @@
                 tasks: ['jasmine:ship'],
             },
         },
-    });
+    };
 
+    for (var i in config.concat) {
+        config.watch['concat_' + i] = {
+            files: config.concat[i].src,
+            tasks: ['concat:' + i],
+        };
+    }
+    for (var i in config.ts) {
+        config.watch['ts_' + i] = {
+            files: config.ts[i].src,
+            tasks: ['ts:' + i],
+        };
+    }
+    for (var i in config.copy) {
+        var files = config.copy[i].files[0].src.slice();
+
+        for (var j = 0; j < files.length; j++) {
+            files[j] = 'intermediate/' + files[j];
+        }
+        config.watch['copy_' + i] = {
+            files: files,
+            tasks: ['copy:' + i],
+        };
+    }
+
+    var uglifyFiles = []
+    for (var i in config.uglify.ship.files) {
+        uglifyFiles.push(config.uglify.ship.files[i][0]);
+    }
+
+    config.watch['uglify'] = {
+        files: uglifyFiles,
+        tasks: ['uglify:ship'],
+    };
+
+
+    // console.log(JSON.stringify(config, null, 2));
+    grunt.initConfig(config);
     grunt.registerTask('debug', ['concat:*', 'ts:*', 'copy:*']);
     grunt.registerTask('ship', ['debug', 'uglify:ship']);
     grunt.registerTask('build', ['debug', 'ship']);
