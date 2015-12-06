@@ -23,9 +23,11 @@
             fundamental: {
                 files: [
                     {
-                        expand: false,
-                        src: ['intermediate/fundamental.js'],
-                        dest: 'build/fundamental.js',
+                        expand: true,
+                        cwd: 'intermediate/',
+                        src: ['fundamental.js', 'fundamental.d.ts', 'fundamental.js.map'],
+                        dest: 'build/',
+                        flatten: true,
                         filter: 'isFile'
                     }],
             },
