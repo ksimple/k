@@ -1,1 +1,1 @@
-export declare function attach(element: any): void;
+export declare function attach(root: any): void;

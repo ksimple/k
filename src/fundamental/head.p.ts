@@ -1,2 +1,2 @@
-/// <amd-module name="kFundamental">
+/// <amd-module name="kFundamental"/>
 import $ = require('jquery');

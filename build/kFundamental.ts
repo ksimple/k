@@ -1,4 +1,4 @@
-/// <amd-module name="kFundamental">
+/// <amd-module name="kFundamental"/>
 import $ = require('jquery');
 
 export interface IDisposable {
@@ -140,13 +140,6 @@ export class CssTextBuilder {
         this._state = CssTextBuilder._selectorState;
     }
 
-    public append(text) {
-        this.pushSelector(text);
-    }
-
-    public push(text) {
-        this.pushSelector(text);
-    }
     public pushSelector(selector) {
         if (this._state == CssTextBuilder._propertyState) {
             this._buffer += '}';
@@ -175,31 +168,6 @@ export class CssTextBuilder {
         }
 
         this._buffer += ';';
-    }
-
-    public propertyBegin() {
-        switch (this._state) {
-            case CssTextBuilder._selectorState:
-                this._buffer += '{';
-                this._state = CssTextBuilder._propertyState;
-                break;
-
-            case CssTextBuilder._propertyState:
-                throw createError(0, 'CssTextBuilder', 'cannot use propertyBegin in propertyState');
-        }
-    }
-
-    public propertyEnd() {
-        switch (this._state) {
-            case CssTextBuilder._selectorState:
-                throw createError(0, 'CssTextBuilder', 'cannot use propertyEnd in selectorState');
-                break;
-
-            case CssTextBuilder._propertyState:
-                this._buffer += '}';
-                this._state = CssTextBuilder._selectorState;
-                break;
-        }
     }
 
     public toString() {

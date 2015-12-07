@@ -109,12 +109,6 @@ define("kFundamental", ["require", "exports", 'jquery'], function (require, expo
             this._buffer = '';
             this._state = CssTextBuilder._selectorState;
         }
-        CssTextBuilder.prototype.append = function (text) {
-            this.pushSelector(text);
-        };
-        CssTextBuilder.prototype.push = function (text) {
-            this.pushSelector(text);
-        };
         CssTextBuilder.prototype.pushSelector = function (selector) {
             if (this._state == CssTextBuilder._propertyState) {
                 this._buffer += '}';
@@ -137,27 +131,6 @@ define("kFundamental", ["require", "exports", 'jquery'], function (require, expo
                 this._buffer += unit;
             }
             this._buffer += ';';
-        };
-        CssTextBuilder.prototype.propertyBegin = function () {
-            switch (this._state) {
-                case CssTextBuilder._selectorState:
-                    this._buffer += '{';
-                    this._state = CssTextBuilder._propertyState;
-                    break;
-                case CssTextBuilder._propertyState:
-                    throw createError(0, 'CssTextBuilder', 'cannot use propertyBegin in propertyState');
-            }
-        };
-        CssTextBuilder.prototype.propertyEnd = function () {
-            switch (this._state) {
-                case CssTextBuilder._selectorState:
-                    throw createError(0, 'CssTextBuilder', 'cannot use propertyEnd in selectorState');
-                    break;
-                case CssTextBuilder._propertyState:
-                    this._buffer += '}';
-                    this._state = CssTextBuilder._selectorState;
-                    break;
-            }
         };
         CssTextBuilder.prototype.toString = function () {
             if (this._state == CssTextBuilder._propertyState) {

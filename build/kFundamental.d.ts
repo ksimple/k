@@ -69,12 +69,8 @@ export declare class CssTextBuilder {
     private _state;
     private _buffer;
     constructor();
-    append(text: any): void;
-    push(text: any): void;
     pushSelector(selector: any): void;
     property(name: any, value: any, unit?: any): void;
-    propertyBegin(): void;
-    propertyEnd(): void;
     toString(): any;
 }
 export declare class DynamicStylesheet {

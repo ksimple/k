@@ -22,6 +22,7 @@
                 src: [
                     'src/layouter/head.p.ts',
                     'src/layouter/Vertical.p.ts',
+                    'src/layouter/Horizontal.p.ts',
                     'src/layouter/Layouter.p.ts',
                     'src/layouter/tail.p.ts',
                 ],
