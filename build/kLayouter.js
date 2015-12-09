@@ -1,13 +1,16 @@
 define("kLayouter", ["require", "exports", 'kFundamental', 'jquery'], function (require, exports, fundamental, $) {
     var Vertical = (function () {
         function Vertical(element) {
+            var _this = this;
             this._element = element;
-            this._className = 'kl-vertical-' + getRandomSuffix();
+            this._className = 'kLayouter-' + getRandomSuffix();
             this._element.addClass(this._className);
             if (this._element[0].tagName == 'BODY') {
                 grabBody(true);
             }
             this.layout();
+            this._element.on('kLayouter.sizeChanged', function () { return _this._sizeChanged(); });
+            this._element.on('kLayouter.relayout', function () { return _this.layout(); });
         }
         Vertical.prototype.layout = function () {
             var elements = this._element.find('>div');
@@ -16,45 +19,41 @@ define("kLayouter", ["require", "exports", 'kFundamental', 'jquery'], function (
             var cssFixedHeight = '';
             for (var index = 0; index < elements.length; index++) {
                 var element = elements.eq(index);
-                var _a = splitIntoNumberAndUnit(element.attr('data-kl-vertical-height')), height = _a[0], unit = _a[1];
+                var raw = element.attr('kLayouter-height');
+                var _a = splitIntoNumberAndUnit(raw), height = _a[0], unit = _a[1];
                 var option = {
+                    raw: raw,
                     index: index,
                     height: height,
                     unit: unit,
                     css: {},
                 };
                 options.push(option);
-                switch (unit) {
-                    case 'px':
-                    case '%':
-                        cssFixedHeight += cssFixedHeight == '' ? option.height + option.unit : ' + ' + option.height + option.unit;
-                        break;
-                    case '?':
-                        var realHeight = element.height();
-                        option.height = realHeight;
-                        option.unit = 'px';
-                        cssFixedHeight += cssFixedHeight == '' ? option.height + option.unit : ' + ' + option.height + option.unit;
-                        break;
+                if (raw == '?') {
+                    var realHeight = element.height();
+                    option.height = realHeight;
+                    option.unit = 'px';
+                    cssFixedHeight += cssFixedHeight == '' ? option.height + option.unit : ' + ' + option.height + option.unit;
+                }
+                else if (unit == 'px' || unit == '%') {
+                    cssFixedHeight += cssFixedHeight == '' ? option.height + option.unit : ' + ' + option.height + option.unit;
                 }
             }
             var top = '0px';
             for (var index = 0; index < elements.length; index++) {
                 var option = options[index];
                 option.css.top = 'calc(' + top + ')';
-                switch (option.unit) {
-                    case 'px':
-                    case '%':
-                        top += ' + ' + option.height + option.unit;
-                        option.css.height = 'calc(' + option.height + option.unit + ')';
-                        break;
-                    case '%*':
-                        top += ' + (100% - (' + cssFixedHeight + ')) * ' + option.height + ' / 100';
-                        option.css.height = 'calc((100% - (' + cssFixedHeight + ')) * ' + option.height + ' / 100)';
-                        break;
-                    case '*':
-                        top += ' + (100% - (' + cssFixedHeight + '))';
-                        option.css.height = 'calc(100% - (' + cssFixedHeight + '))';
-                        break;
+                if (option.raw == '*') {
+                    top += ' + (100% - (' + cssFixedHeight + '))';
+                    option.css.height = 'calc(100% - (' + cssFixedHeight + '))';
+                }
+                else if (option.unit == 'px' || option.unit == '%') {
+                    top += ' + ' + option.height + option.unit;
+                    option.css.height = 'calc(' + option.height + option.unit + ')';
+                }
+                else if (option.unit == '%*') {
+                    top += ' + (100% - (' + cssFixedHeight + ')) * ' + option.height + ' / 100';
+                    option.css.height = 'calc((100% - (' + cssFixedHeight + ')) * ' + option.height + ' / 100)';
                 }
             }
             css.pushSelector('.' + this._className);
@@ -64,12 +63,17 @@ define("kLayouter", ["require", "exports", 'kFundamental', 'jquery'], function (
                 var option = options[index];
                 element.addClass(this._className + '-' + index);
                 css.pushSelector('.' + this._className + '>.' + this._className + '-' + index);
-                css.property('height', option.css.height);
+                if (option.raw != '?') {
+                    css.property('height', option.css.height);
+                }
                 css.property('top', option.css.top);
                 css.property('width', 100, '%');
                 css.property('position', 'absolute');
             }
             setStyle(this._className, css.toString());
+        };
+        Vertical.prototype._sizeChanged = function () {
+            this.layout();
         };
         return Vertical;
     })();
@@ -100,6 +104,9 @@ define("kLayouter", ["require", "exports", 'kFundamental', 'jquery'], function (
         }
         dynamicStyle.content(text);
     }
+    function onWindowSizeChanged() {
+        $(document.body).trigger('kLayouter.sizeChanged');
+    }
     function grabBody(grab) {
         if (grab) {
             var css = new fundamental.CssTextBuilder();
@@ -111,9 +118,11 @@ define("kLayouter", ["require", "exports", 'kFundamental', 'jquery'], function (
             css.property('margin', 0, 'px');
             css.property('padding', 0, 'px');
             setStyle('body', css.toString());
+            $(window).on('resize', onWindowSizeChanged);
         }
         else {
             setStyle('body');
+            $(window).off('resize', onWindowSizeChanged);
         }
     }
     function attach(root) {
@@ -121,8 +130,8 @@ define("kLayouter", ["require", "exports", 'kFundamental', 'jquery'], function (
         if (root[0] == window) {
             root = $(document.body);
         }
-        var items = root.find('[data-kl-type]');
-        if (root.attr('data-kl-type')) {
+        var items = root.find('[kLayouter-type]');
+        if (root.attr('kLayouter-type')) {
             items = $(root).add(items);
         }
         for (var i = 0; i < items.length; i++) {
@@ -130,7 +139,7 @@ define("kLayouter", ["require", "exports", 'kFundamental', 'jquery'], function (
             if (item.data('kl-item')) {
                 continue;
             }
-            switch (item.attr('data-kl-type')) {
+            switch (item.attr('kLayouter-type')) {
                 case 'vertical':
                     item.data('kl-item', new Vertical(item));
                     break;

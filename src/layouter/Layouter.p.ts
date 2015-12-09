@@ -25,6 +25,10 @@ function setStyle(key, value?) {
     dynamicStyle.content(text);
 }
 
+function onWindowSizeChanged() {
+    $(document.body).trigger('kLayouter.sizeChanged');
+}
+
 function grabBody(grab) {
     if (grab) {
         var css = new fundamental.CssTextBuilder();
@@ -37,8 +41,10 @@ function grabBody(grab) {
         css.property('margin', 0, 'px');
         css.property('padding', 0, 'px');
         setStyle('body', css.toString());
+        $(window).on('resize', onWindowSizeChanged);
     } else {
         setStyle('body');
+        $(window).off('resize', onWindowSizeChanged);
     }
 }
 
@@ -49,9 +55,9 @@ export function attach(root) {
         root = $(document.body);
     }
 
-    var items = root.find('[data-kl-type]');
+    var items = root.find('[kLayouter-type]');
 
-    if (root.attr('data-kl-type')) {
+    if (root.attr('kLayouter-type')) {
         items = $(root).add(items);
     }
 
@@ -62,7 +68,7 @@ export function attach(root) {
             continue;
         }
 
-        switch (item.attr('data-kl-type')) {
+        switch (item.attr('kLayouter-type')) {
             case 'vertical':
                 item.data('kl-item', new Vertical(item));
                 break;
