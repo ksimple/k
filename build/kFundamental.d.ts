@@ -64,11 +64,13 @@ export declare class Disposer {
     dispose(): void;
 }
 export declare class CssTextBuilder {
+    static defaultPretty: boolean;
     private static _selectorState;
     private static _propertyState;
     private _state;
     private _buffer;
-    constructor();
+    private _pretty;
+    constructor(pretty?: boolean);
     pushSelector(selector: any): void;
     property(name: any, value: any, unit?: any): void;
     toString(): any;

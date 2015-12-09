@@ -105,13 +105,19 @@ define("kFundamental", ["require", "exports", 'jquery'], function (require, expo
     })();
     exports.Disposer = Disposer;
     var CssTextBuilder = (function () {
-        function CssTextBuilder() {
+        function CssTextBuilder(pretty) {
             this._buffer = '';
+            this._pretty = typeof (pretty) == 'undefined' ? CssTextBuilder.defaultPretty : pretty;
             this._state = CssTextBuilder._selectorState;
         }
         CssTextBuilder.prototype.pushSelector = function (selector) {
             if (this._state == CssTextBuilder._propertyState) {
-                this._buffer += '}';
+                if (this._pretty) {
+                    this._buffer += '}\n';
+                }
+                else {
+                    this._buffer += '}';
+                }
                 this._state = CssTextBuilder._selectorState;
             }
             this._buffer += selector;
@@ -121,23 +127,43 @@ define("kFundamental", ["require", "exports", 'jquery'], function (require, expo
                 throw (0, 'CssTextBuilder', 'cannot use unit when the second argument are NaN');
             }
             if (this._state == CssTextBuilder._selectorState) {
-                this._buffer += '{';
+                if (this._pretty) {
+                    this._buffer += '\n{\n';
+                }
+                else {
+                    this._buffer += '{';
+                }
                 this._state = CssTextBuilder._propertyState;
+            }
+            if (this._pretty) {
+                this._buffer += '    ';
             }
             this._buffer += name;
             this._buffer += ':';
+            if (this._pretty) {
+                this._buffer += ' ';
+            }
             this._buffer += value;
             if (unit) {
                 this._buffer += unit;
             }
             this._buffer += ';';
+            if (this._pretty) {
+                this._buffer += '\n';
+            }
         };
         CssTextBuilder.prototype.toString = function () {
             if (this._state == CssTextBuilder._propertyState) {
-                this._buffer += '}';
+                if (this._pretty) {
+                    this._buffer += '}\n';
+                }
+                else {
+                    this._buffer += '}';
+                }
             }
             return this._buffer;
         };
+        CssTextBuilder.defaultPretty = true;
         // Per http://jsperf.com/array-join-vs-string-connect
         // use string is faster than array join
         CssTextBuilder._selectorState = 0;

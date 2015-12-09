@@ -9,8 +9,12 @@ function splitIntoNumberAndUnit(value) {
 var styles = {}
 var dynamicStyle = new fundamental.DynamicStylesheet('kLayouter-' + getRandomSuffix());
 
-function setStyle(key, value) {
-    styles[key] = value;
+function setStyle(key, value?) {
+    if (value) {
+        styles[key] = value;
+    } else {
+        delete styles[key];
+    }
 
     var text = '';
 
@@ -19,6 +23,23 @@ function setStyle(key, value) {
     }
 
     dynamicStyle.content(text);
+}
+
+function grabBody(grab) {
+    if (grab) {
+        var css = new fundamental.CssTextBuilder();
+
+        css.pushSelector('html, body');
+        css.property('position', 'absolute');
+        css.property('width', '100%');
+        css.property('height', '100%');
+        css.property('border', '0px');
+        css.property('margin', 0, 'px');
+        css.property('padding', 0, 'px');
+        setStyle('body', css.toString());
+    } else {
+        setStyle('body');
+    }
 }
 
 export function attach(root) {
