@@ -7,7 +7,10 @@ function getRandomSuffix() {
 }
 
 function splitIntoNumberAndUnit(value) {
-    return value.match(/(\d*)(.*)/).slice(1);
+    var [length, unit] = value.match(/(\d*)(.*)/).slice(1);
+
+    length = parseInt(length);
+    return [length, unit];
 }
 
 var styles = {}
@@ -74,11 +77,19 @@ function attach(root) {
 
         switch (item.attr('kLayouter-type')) {
             case 'vertical':
-                item[0]['kLayouter-item'] = new Stack(item, 'vertical');
+                if ((<any>$).browser.msie && (<any>$).browser.version < 9.0) {
+                    item[0]['kLayouter-item'] = new SelfCalculatedStack(item, 'vertical');
+                } else {
+                    item[0]['kLayouter-item'] = new Stack(item, 'vertical');
+                }
                 break;
 
             case 'horizontal':
-                item[0]['kLayouter-item'] = new Stack(item, 'horizontal');
+                if ((<any>$).browser.msie && (<any>$).browser.version < 9.0) {
+                    item[0]['kLayouter-item'] = new SelfCalculatedStack(item, 'horizontal');
+                } else {
+                    item[0]['kLayouter-item'] = new Stack(item, 'horizontal');
+                }
                 break;
         }
     }

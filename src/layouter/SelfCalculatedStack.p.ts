@@ -1,4 +1,4 @@
-class Stack {
+class SelfCalculatedStack {
     private _element;
     private _className;
     private _style;
@@ -38,16 +38,13 @@ class Stack {
         var height = this._element.height();
         var selfSizeChanged = this._width != width || this._height != height;
 
-        if (!childSizeChanged && selfSizeChanged) {
+        if (!childSizeChanged && !selfSizeChanged) {
             return;
         }
 
         var elements = this._element.find('>div');
-        var css = new fundamental.CssTextBuilder();
+        var css = null;
         var options = [];
-        var cssFixedLength = '';
-        var cssFixedLengthWithoutPercentage = '';
-        var totalFixedPercentage = 0;
         var tempCssIsSet = false;
 
         for (var index = 0; index < elements.length; index++) {
@@ -58,21 +55,24 @@ class Stack {
                 raw: raw,
                 index: index,
                 length: length,
-                unit: unit,
-                css: {}
+                unit: unit
             };
 
             options.push(option);
 
+            if (raw != '?' && raw != '*' && unit != 'px' && unit != '%*' && unit != '%') {
+                throw fundamental.createError(0, 'kLayouter', 'Unsupported unit ' + option.raw);
+            }
+
             if (raw == '?') {
                 if (!tempCssIsSet) {
-                    var tempCss = new fundamental.CssTextBuilder();
+                    css = new fundamental.CssTextBuilder();
 
-                    tempCss.pushSelector('.' + this._className);
-                    tempCss.property('position', 'relative');
-                    tempCss.pushSelector('.' + this._className + '>*');
-                    tempCss.property('position', 'absolute');
-                    setStyle(this._className, tempCss.toString());
+                    css.pushSelector('.' + this._className);
+                    css.property('position', 'relative');
+                    css.pushSelector('.' + this._className + '>*');
+                    css.property('position', 'absolute');
+                    setStyle(this._className, css.toString());
                     tempCssIsSet = true;
                 }
 
@@ -90,44 +90,16 @@ class Stack {
 
                 option.length = realLength;
                 option.unit = 'px';
-                cssFixedLength += cssFixedLength == '' ? option.length + option.unit : ' + ' + option.length + option.unit;
-                cssFixedLengthWithoutPercentage += cssFixedLengthWithoutPercentage == '' ? option.length + option.unit : ' + ' + option.length + option.unit;
-            } else if (option.unit == 'px' || option.unit == '%') {
-                cssFixedLength += cssFixedLength == '' ? option.length + option.unit : ' + ' + option.length + option.unit;
-
-                if (option.unit != '%') {
-                    cssFixedLengthWithoutPercentage += cssFixedLengthWithoutPercentage == '' ? option.length + option.unit : ' + ' + option.length + option.unit;
-                } else {
-                    totalFixedPercentage += option.length;
-                }
             }
         }
 
-        var offset = '0px';
-
-        for (var index = 0; index < elements.length; index++) {
-            var option = options[index];
-            option.css.offset = 'calc(' + offset + ')';
-
-            if (option.raw == '*') {
-                offset += ' + (100% - (' + cssFixedLength + '))';
-                option.css.length = 'calc(100% - (' + cssFixedLength + '))';
-            } else if (option.unit == 'px' || option.unit == '%') {
-                offset += ' + ' + option.length + option.unit;
-                option.css.length = 'calc(' + option.length + option.unit + ')';
-            } else if (option.unit == '%*') {
-                offset += ' + (100% - (' + cssFixedLength + ')) * ' + option.length + ' / 100';
-                option.css.length = 'calc((100% - (' + cssFixedLength + ')) * ' + option.length + ' / 100)';
-            }
-        }
-
-        if (JSON.stringify(options) == this._lastChildOptions && selfSizeChanged) {
+        if (JSON.stringify(options) == this._lastChildOptions && !selfSizeChanged) {
             return;
         }
 
+        css = new fundamental.CssTextBuilder();
         css.pushSelector('.' + this._className);
         css.property('position', 'relative');
-        css.property('min-' + this._lengthName, 'calc((' + cssFixedLengthWithoutPercentage + ') / ' + (100 - totalFixedPercentage) + ' * 100)');
         // FIXME: IE bug, unexpected scrollbar showing, so add this workaround here
         if (1) {
             css.property('overflow', 'hidden');
@@ -138,11 +110,77 @@ class Stack {
             var option = options[index];
 
             element.addClass(this._className + '-' + index);
+
+            if (option.unit != 'px' && option.unit != '%') {
+                continue;
+            }
+
             css.pushSelector('.' + this._className + '>.' + this._className + '-' + index);
             if (option.raw != '?') {
-                css.property(this._lengthName, option.css.length);
+                css.property(this._lengthName, option.length, option.unit);
             }
-            css.property(this._offsetName, option.css.offset);
+            css.property(this._quadratureLengthName, 100, '%');
+            css.property('position', 'absolute');
+        }
+
+        setStyle(this._className, css.toString());
+
+        var totalFixedLength = 0;
+        var totalLength = this._element[this._lengthName]();
+
+        for (var index = 0; index < elements.length; index++) {
+            var element = elements.eq(index);
+            var option = options[index];
+
+            if (option.raw != '?' && option.unit != 'px' && option.unit != '%') {
+                continue;
+            }
+
+            if (option.unit != 'px') {
+                option.length = element[this._lengthName]();
+                option.unit = 'px';
+            }
+            totalFixedLength += option.length;
+        }
+
+        var offset = 0;
+
+        if (totalFixedLength > totalLength) {
+            totalFixedLength = totalLength;
+        }
+
+        for (var index = 0; index < elements.length; index++) {
+            var option = options[index];
+
+            if (option.raw == '*') {
+                option.length = totalLength - totalFixedLength;
+                option.unit = 'px';
+            } else if (option.unit == '%*') {
+                option.length = (totalLength - totalFixedLength) * option.length / 100;
+                option.unit = 'px';
+            }
+
+            option.offset = offset;
+            offset += option.length;
+        }
+
+        css = new fundamental.CssTextBuilder();
+        css.pushSelector('.' + this._className);
+        css.property('position', 'relative');
+        // FIXME: IE bug, unexpected scrollbar showing, so add this workaround here
+        if (1) {
+            css.property('overflow', 'hidden');
+        }
+
+        for (var index = 0; index < elements.length; index++) {
+            var option = options[index];
+
+
+            css.pushSelector('.' + this._className + '>.' + this._className + '-' + index);
+            if (option.raw != '?') {
+                css.property(this._lengthName, option.length, option.unit);
+            }
+            css.property(this._offsetName, option.offset, option.unit);
             css.property(this._quadratureLengthName, 100, '%');
             css.property('position', 'absolute');
         }

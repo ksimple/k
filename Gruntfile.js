@@ -25,6 +25,7 @@
             tail: ['src/layouter/tail.p.ts'],
             sources: [
                 'src/layouter/Stack.p.ts',
+                'src/layouter/SelfCalculatedStack.p.ts',
                 'src/layouter/Layouter.p.ts',
             ],
         },
@@ -111,7 +112,7 @@
         };
 
         config.ts[name + '_debug'] = {
-            src: ['inc/jquery.d.ts', 'intermediate/' + name + '.ts'],
+            src: ['inc/jquery.d.ts', 'inc/jquery.migrate.d.ts', 'intermediate/' + name + '.ts'],
             options: {
                 target: 'es5',
                 declaration: true,
@@ -168,7 +169,7 @@
         };
 
         config.ts[name + '_ship'] = {
-            src: ['inc/jquery.d.ts', 'intermediate/' + name + '.ship.ts'],
+            src: ['inc/jquery.d.ts', 'inc/jquery.migrate.d.ts', 'intermediate/' + name + '.ship.ts'],
             options: {
                 target: 'es5',
                 declaration: true,
