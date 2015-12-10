@@ -97,7 +97,11 @@ $.fn.extend({
                         var layouter = this[i]['kLayouter-item'];
 
                         if (layouter) {
-                            layouter.layout();
+                            if (typeof(args[0]) != 'undefined') {
+                                layouter.layout(args[0]);
+                            } else {
+                                layouter.layout();
+                            }
                         }
                     }
                     break;

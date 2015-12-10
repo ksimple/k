@@ -18,6 +18,7 @@ class Stack {
     private _quadratureLengthName;
     private _width;
     private _height;
+    private _lastChildOptions;
 
     constructor(element, direction) {
         this._direction = direction;
@@ -39,16 +40,15 @@ class Stack {
         if (this._element[0].tagName == 'BODY') {
             grabBody(true);
         }
-        this.layout();
-        this._element.on('kLayouter.sizeChanged', (e) => this._sizeChanged(e));
-        this._element.on('kLayouter.relayout', (e) => this._relayout(e));
+        this.layout(true);
     }
 
-    public layout() {
+    public layout(childSizeChanged = false) {
         var width = this._element.width();
         var height = this._element.height();
+        var selfSizeChanged = this._width != width || this._height != height;
 
-        if (this._width == width && this._height == height) {
+        if (!childSizeChanged && selfSizeChanged) {
             return;
         }
 
@@ -131,6 +131,10 @@ class Stack {
             }
         }
 
+        if (JSON.stringify(options) == this._lastChildOptions && selfSizeChanged) {
+            return;
+        }
+
         css.pushSelector('.' + this._className);
         css.property('position', 'relative');
         css.property('min-' + this._lengthName, 'calc((' + cssFixedLengthWithoutPercentage + ') / ' + (100 - totalFixedPercentage) + ' * 100)');
@@ -157,26 +161,15 @@ class Stack {
 
         this._width = this._element.width();
         this._height = this._element.height();
+        this._lastChildOptions = JSON.stringify(options);
 
         for (var index = 0; index < elements.length; index++) {
             var element = elements.eq(index);
             (<any>element).kLayouter('layout');
         }
 
-        if (this._element.parent()) {
-            (<any>this._element.parent()).kLayouter('layout');
-        }
-    }
-
-    private _sizeChanged(e) {
-        if (e.target == this._element[0]) {
-            this.layout();
-        }
-    }
-
-    private _relayout(e) {
-        if (e.target == this._element[0]) {
-            this.layout();
+        if (this._element.parent() && selfSizeChanged) {
+            (<any>this._element.parent()).kLayouter('layout', true);
         }
     }
 }
@@ -281,7 +274,11 @@ $.fn.extend({
                         var layouter = this[i]['kLayouter-item'];
 
                         if (layouter) {
-                            layouter.layout();
+                            if (typeof(args[0]) != 'undefined') {
+                                layouter.layout(args[0]);
+                            } else {
+                                layouter.layout();
+                            }
                         }
                     }
                     break;

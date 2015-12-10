@@ -3,7 +3,6 @@ define("kLayouter", ["require", "exports", 'kFundamental', 'jquery'], function (
     var _DEBUG = 1;
     var Stack = (function () {
         function Stack(element, direction) {
-            var _this = this;
             this._direction = direction;
             this._element = element;
             this._className = 'kLayouter-' + getRandomSuffix();
@@ -22,14 +21,14 @@ define("kLayouter", ["require", "exports", 'kFundamental', 'jquery'], function (
             if (this._element[0].tagName == 'BODY') {
                 grabBody(true);
             }
-            this.layout();
-            this._element.on('kLayouter.sizeChanged', function (e) { return _this._sizeChanged(e); });
-            this._element.on('kLayouter.relayout', function (e) { return _this._relayout(e); });
+            this.layout(true);
         }
-        Stack.prototype.layout = function () {
+        Stack.prototype.layout = function (childSizeChanged) {
+            if (childSizeChanged === void 0) { childSizeChanged = false; }
             var width = this._element.width();
             var height = this._element.height();
-            if (this._width == width && this._height == height) {
+            var selfSizeChanged = this._width != width || this._height != height;
+            if (!childSizeChanged && selfSizeChanged) {
                 return;
             }
             var elements = this._element.find('>div');
@@ -104,6 +103,9 @@ define("kLayouter", ["require", "exports", 'kFundamental', 'jquery'], function (
                     option.css.length = 'calc((100% - (' + cssFixedLength + ')) * ' + option.length + ' / 100)';
                 }
             }
+            if (JSON.stringify(options) == this._lastChildOptions && selfSizeChanged) {
+                return;
+            }
             css.pushSelector('.' + this._className);
             css.property('position', 'relative');
             css.property('min-' + this._lengthName, 'calc((' + cssFixedLengthWithoutPercentage + ') / ' + (100 - totalFixedPercentage) + ' * 100)');
@@ -126,22 +128,13 @@ define("kLayouter", ["require", "exports", 'kFundamental', 'jquery'], function (
             setStyle(this._className, css.toString());
             this._width = this._element.width();
             this._height = this._element.height();
+            this._lastChildOptions = JSON.stringify(options);
             for (var index = 0; index < elements.length; index++) {
                 var element = elements.eq(index);
                 element.kLayouter('layout');
             }
-            if (this._element.parent()) {
-                this._element.parent().kLayouter('layout');
-            }
-        };
-        Stack.prototype._sizeChanged = function (e) {
-            if (e.target == this._element[0]) {
-                this.layout();
-            }
-        };
-        Stack.prototype._relayout = function (e) {
-            if (e.target == this._element[0]) {
-                this.layout();
+            if (this._element.parent() && selfSizeChanged) {
+                this._element.parent().kLayouter('layout', true);
             }
         };
         return Stack;
@@ -234,7 +227,12 @@ define("kLayouter", ["require", "exports", 'kFundamental', 'jquery'], function (
                         for (var i = 0; i < this.length; i++) {
                             var layouter = this[i]['kLayouter-item'];
                             if (layouter) {
-                                layouter.layout();
+                                if (typeof (args[0]) != 'undefined') {
+                                    layouter.layout(args[0]);
+                                }
+                                else {
+                                    layouter.layout();
+                                }
                             }
                         }
                         break;
