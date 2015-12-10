@@ -1,4 +1,5 @@
 define("kLayouter", ["require", "exports", 'kFundamental', 'jquery'], function (require, exports, fundamental, $) {
+    var _DEBUG = 0;
     var Stack = (function () {
         function Stack(element, direction) {
             var _this = this;

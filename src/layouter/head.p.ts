@@ -2,3 +2,5 @@
 import fundamental = require('kFundamental');
 import $ = require('jquery');
 
+var _DEBUG = 0;
+

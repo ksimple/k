@@ -1,4 +1,5 @@
 define("kFundamental", ["require", "exports", 'jquery'], function (require, exports, $) {
+    var _DEBUG = 0;
     /**
      * IDisposable interface
      * @interface k.fundamental.IDisposable
@@ -163,7 +164,7 @@ define("kFundamental", ["require", "exports", 'jquery'], function (require, expo
             }
             return this._buffer;
         };
-        CssTextBuilder.defaultPretty = true;
+        CssTextBuilder.defaultPretty = _DEBUG ? true : false;
         // Per http://jsperf.com/array-join-vs-string-connect
         // use string is faster than array join
         CssTextBuilder._selectorState = 0;

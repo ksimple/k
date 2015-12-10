@@ -1,5 +1,5 @@
 export class CssTextBuilder {
-    public static defaultPretty = true;
+    public static defaultPretty = _DEBUG ? true : false;
 
     // Per http://jsperf.com/array-join-vs-string-connect
     // use string is faster than array join

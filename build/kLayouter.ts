@@ -2,6 +2,8 @@
 import fundamental = require('kFundamental');
 import $ = require('jquery');
 
+var _DEBUG = 0;
+
 
 class Stack {
     private _element;
