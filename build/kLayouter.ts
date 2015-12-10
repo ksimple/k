@@ -16,6 +16,8 @@ class Stack {
     private _offsetName;
     private _lengthName;
     private _quadratureLengthName;
+    private _width;
+    private _height;
 
     constructor(element, direction) {
         this._direction = direction;
@@ -43,6 +45,13 @@ class Stack {
     }
 
     public layout() {
+        var width = this._element.width();
+        var height = this._element.height();
+
+        if (this._width == width && this._height == height) {
+            return;
+        }
+
         var elements = this._element.find('>div');
         var css = new fundamental.CssTextBuilder();
         var options = [];
@@ -146,9 +155,16 @@ class Stack {
 
         setStyle(this._className, css.toString());
 
+        this._width = this._element.width();
+        this._height = this._element.height();
+
         for (var index = 0; index < elements.length; index++) {
             var element = elements.eq(index);
-            element.trigger('kLayouter.sizeChanged', { target: element[0] });
+            (<any>element).kLayouter('layout');
+        }
+
+        if (this._element.parent()) {
+            (<any>this._element.parent()).kLayouter('layout');
         }
     }
 
@@ -198,7 +214,7 @@ function setStyle(key, value?) {
 }
 
 function onWindowSizeChanged() {
-    $(document.body).trigger('kLayouter.sizeChanged', { target: document.body });
+    (<any>$(document.body)).kLayouter('layout');
 }
 
 function grabBody(grab) {
@@ -220,7 +236,7 @@ function grabBody(grab) {
     }
 }
 
-export function attach(root) {
+function attach(root) {
     root = $(root).eq(0);
 
     if (root[0] == window) {
@@ -251,6 +267,28 @@ export function attach(root) {
         }
     }
 }
+
+$.fn.extend({
+    kLayouter: function (name?, ...args) {
+        if (arguments.length == 0) {
+            for (var i = 0; i < this.length; i++) {
+                attach(this.eq(i));
+            }
+        } else {
+            switch (name) {
+                case 'layout':
+                    for (var i = 0; i < this.length; i++) {
+                        var layouter = this[i]['kLayouter-item'];
+
+                        if (layouter) {
+                            layouter.layout();
+                        }
+                    }
+                    break;
+            }
+        }
+    }
+});
 
 
 

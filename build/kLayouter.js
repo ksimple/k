@@ -27,6 +27,11 @@ define("kLayouter", ["require", "exports", 'kFundamental', 'jquery'], function (
             this._element.on('kLayouter.relayout', function (e) { return _this._relayout(e); });
         }
         Stack.prototype.layout = function () {
+            var width = this._element.width();
+            var height = this._element.height();
+            if (this._width == width && this._height == height) {
+                return;
+            }
             var elements = this._element.find('>div');
             var css = new fundamental.CssTextBuilder();
             var options = [];
@@ -119,9 +124,14 @@ define("kLayouter", ["require", "exports", 'kFundamental', 'jquery'], function (
                 css.property('position', 'absolute');
             }
             setStyle(this._className, css.toString());
+            this._width = this._element.width();
+            this._height = this._element.height();
             for (var index = 0; index < elements.length; index++) {
                 var element = elements.eq(index);
-                element.trigger('kLayouter.sizeChanged', { target: element[0] });
+                element.kLayouter('layout');
+            }
+            if (this._element.parent()) {
+                this._element.parent().kLayouter('layout');
             }
         };
         Stack.prototype._sizeChanged = function (e) {
@@ -163,7 +173,7 @@ define("kLayouter", ["require", "exports", 'kFundamental', 'jquery'], function (
         dynamicStyle.content(text);
     }
     function onWindowSizeChanged() {
-        $(document.body).trigger('kLayouter.sizeChanged', { target: document.body });
+        $(document.body).kLayouter('layout');
     }
     function grabBody(grab) {
         if (grab) {
@@ -207,6 +217,30 @@ define("kLayouter", ["require", "exports", 'kFundamental', 'jquery'], function (
             }
         }
     }
-    exports.attach = attach;
+    $.fn.extend({
+        kLayouter: function (name) {
+            var args = [];
+            for (var _i = 1; _i < arguments.length; _i++) {
+                args[_i - 1] = arguments[_i];
+            }
+            if (arguments.length == 0) {
+                for (var i = 0; i < this.length; i++) {
+                    attach(this.eq(i));
+                }
+            }
+            else {
+                switch (name) {
+                    case 'layout':
+                        for (var i = 0; i < this.length; i++) {
+                            var layouter = this[i]['kLayouter-item'];
+                            if (layouter) {
+                                layouter.layout();
+                            }
+                        }
+                        break;
+                }
+            }
+        }
+    });
 });
 //# sourceMappingURL=kLayouter.js.map

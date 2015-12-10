@@ -30,7 +30,7 @@ function setStyle(key, value?) {
 }
 
 function onWindowSizeChanged() {
-    $(document.body).trigger('kLayouter.sizeChanged', { target: document.body });
+    (<any>$(document.body)).kLayouter('layout');
 }
 
 function grabBody(grab) {
@@ -52,7 +52,7 @@ function grabBody(grab) {
     }
 }
 
-export function attach(root) {
+function attach(root) {
     root = $(root).eq(0);
 
     if (root[0] == window) {
@@ -83,4 +83,26 @@ export function attach(root) {
         }
     }
 }
+
+$.fn.extend({
+    kLayouter: function (name?, ...args) {
+        if (arguments.length == 0) {
+            for (var i = 0; i < this.length; i++) {
+                attach(this.eq(i));
+            }
+        } else {
+            switch (name) {
+                case 'layout':
+                    for (var i = 0; i < this.length; i++) {
+                        var layouter = this[i]['kLayouter-item'];
+
+                        if (layouter) {
+                            layouter.layout();
+                        }
+                    }
+                    break;
+            }
+        }
+    }
+});
 

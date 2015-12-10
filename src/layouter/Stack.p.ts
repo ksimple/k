@@ -6,6 +6,8 @@ class Stack {
     private _offsetName;
     private _lengthName;
     private _quadratureLengthName;
+    private _width;
+    private _height;
 
     constructor(element, direction) {
         this._direction = direction;
@@ -33,6 +35,13 @@ class Stack {
     }
 
     public layout() {
+        var width = this._element.width();
+        var height = this._element.height();
+
+        if (this._width == width && this._height == height) {
+            return;
+        }
+
         var elements = this._element.find('>div');
         var css = new fundamental.CssTextBuilder();
         var options = [];
@@ -136,9 +145,16 @@ class Stack {
 
         setStyle(this._className, css.toString());
 
+        this._width = this._element.width();
+        this._height = this._element.height();
+
         for (var index = 0; index < elements.length; index++) {
             var element = elements.eq(index);
-            element.trigger('kLayouter.sizeChanged', { target: element[0] });
+            (<any>element).kLayouter('layout');
+        }
+
+        if (this._element.parent()) {
+            (<any>this._element.parent()).kLayouter('layout');
         }
     }
 
