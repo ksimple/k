@@ -31,6 +31,8 @@ define("kLayouter", ["require", "exports", 'kFundamental', 'jquery'], function (
             var css = new fundamental.CssTextBuilder();
             var options = [];
             var cssFixedLength = '';
+            var cssFixedLengthWithoutPercentage = '';
+            var totalFixedPercentage = 0;
             var tempCssIsSet = false;
             for (var index = 0; index < elements.length; index++) {
                 var element = elements.eq(index);
@@ -68,12 +70,18 @@ define("kLayouter", ["require", "exports", 'kFundamental', 'jquery'], function (
                     option.length = realLength;
                     option.unit = 'px';
                     cssFixedLength += cssFixedLength == '' ? option.length + option.unit : ' + ' + option.length + option.unit;
+                    cssFixedLengthWithoutPercentage += cssFixedLengthWithoutPercentage == '' ? option.length + option.unit : ' + ' + option.length + option.unit;
                 }
-                else if (unit == 'px' || unit == '%') {
+                else if (option.unit == 'px' || option.unit == '%') {
                     cssFixedLength += cssFixedLength == '' ? option.length + option.unit : ' + ' + option.length + option.unit;
+                    if (option.unit != '%') {
+                        cssFixedLengthWithoutPercentage += cssFixedLengthWithoutPercentage == '' ? option.length + option.unit : ' + ' + option.length + option.unit;
+                    }
+                    else {
+                        totalFixedPercentage += option.length;
+                    }
                 }
             }
-            cssFixedLength = 'max(0px, ' + cssFixedLength + ')';
             var offset = '0px';
             for (var index = 0; index < elements.length; index++) {
                 var option = options[index];
@@ -93,6 +101,11 @@ define("kLayouter", ["require", "exports", 'kFundamental', 'jquery'], function (
             }
             css.pushSelector('.' + this._className);
             css.property('position', 'relative');
+            css.property('min-' + this._lengthName, 'calc((' + cssFixedLengthWithoutPercentage + ') / ' + (100 - totalFixedPercentage) + ' * 100)');
+            // FIXME: IE bug, unexpected scrollbar showing, so add this workaround here
+            if (1) {
+                css.property('overflow', 'hidden');
+            }
             for (var index = 0; index < elements.length; index++) {
                 var element = elements.eq(index);
                 var option = options[index];
@@ -106,10 +119,6 @@ define("kLayouter", ["require", "exports", 'kFundamental', 'jquery'], function (
                 css.property('position', 'absolute');
             }
             setStyle(this._className, css.toString());
-            // FIXME: IE bug, unexpected scrollbar showing, so add this workaround here
-            if (1) {
-                element.css('overflow', 'hidden');
-            }
             for (var index = 0; index < elements.length; index++) {
                 var element = elements.eq(index);
                 element.trigger('kLayouter.sizeChanged', { target: element[0] });

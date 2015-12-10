@@ -109,6 +109,21 @@
             files: config.concat[name + '_debug'].src,
             tasks: ['concat:' + name + '_debug'],
         };
+
+        config.ts[name + '_debug'] = {
+            src: ['inc/jquery.d.ts', 'intermediate/' + name + '.ts'],
+            options: {
+                target: 'es5',
+                declaration: true,
+                removeComments: false,
+                module: 'amd',
+            },
+        };
+        config.watch['ts_' + name + '_debug'] = {
+            files: config.ts[name + '_debug'].src,
+            tasks: ['ts:' + name + '_debug'],
+        };
+
         config.copy[name + '_debug'] = {
             files: [{
                 expand: true,
@@ -128,20 +143,6 @@
         config.watch['copy_' + name + '_debug'] = {
             files: copyFiles,
             tasks: ['copy:' + name + '_debug'],
-        };
-
-        config.ts[name + '_debug'] = {
-            src: ['inc/jquery.d.ts', 'intermediate/' + name + '.ts'],
-            options: {
-                target: 'es5',
-                declaration: true,
-                removeComments: false,
-                module: 'amd',
-            },
-        };
-        config.watch['ts_' + name + '_debug'] = {
-            files: config.ts[name + '_debug'].src,
-            tasks: ['ts:' + name + '_debug'],
         };
     }
 
