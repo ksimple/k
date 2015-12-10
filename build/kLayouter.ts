@@ -5,6 +5,9 @@ import $ = require('jquery');
 var _DEBUG = 0;
 
 
+var _DEBUG = 1;
+
+
 class Stack {
     private _element;
     private _className;
@@ -43,7 +46,8 @@ class Stack {
         var elements = this._element.find('>div');
         var css = new fundamental.CssTextBuilder();
         var options = [];
-        var cssFixedHeight = '';
+        var cssFixedLength = '';
+        var tempCssIsSet = false;
 
         for (var index = 0; index < elements.length; index++) {
             var element = elements.eq(index);
@@ -60,23 +64,38 @@ class Stack {
             options.push(option);
 
             if (raw == '?') {
-                var realHeight;
+                if (!tempCssIsSet) {
+                    var tempCss = new fundamental.CssTextBuilder();
 
-                if (this._direction == 'vertical') {
-                    realHeight = element[this._lengthName]();
-                } else {
-                    element.css('display', 'inline-block');
-                    realHeight = element[this._lengthName]();
-                    element.css('display', '');
+                    tempCss.pushSelector('.' + this._className);
+                    tempCss.property('position', 'relative');
+                    tempCss.pushSelector('.' + this._className + '>*');
+                    tempCss.property('position', 'absolute');
+                    setStyle(this._className, tempCss.toString());
+                    tempCssIsSet = true;
                 }
 
-                option.length = realHeight;
+                var realLength;
+                element.css('position', 'relative');
+
+                if (this._direction == 'vertical') {
+                    realLength = element[this._lengthName]();
+                } else {
+                    element.css('display', 'inline-block');
+                    realLength = element[this._lengthName]();
+                    element.css('display', '');
+                }
+                element.css('position', '');
+
+                option.length = realLength;
                 option.unit = 'px';
-                cssFixedHeight += cssFixedHeight == '' ? option.length + option.unit : ' + ' + option.length + option.unit;
+                cssFixedLength += cssFixedLength == '' ? option.length + option.unit : ' + ' + option.length + option.unit;
             } else if (unit == 'px' || unit == '%') {
-                cssFixedHeight += cssFixedHeight == '' ? option.length + option.unit : ' + ' + option.length + option.unit;
+                cssFixedLength += cssFixedLength == '' ? option.length + option.unit : ' + ' + option.length + option.unit;
             }
         }
+
+        cssFixedLength = 'max(0px, ' + cssFixedLength + ')';
 
         var offset = '0px';
 
@@ -85,14 +104,14 @@ class Stack {
             option.css.offset = 'calc(' + offset + ')';
 
             if (option.raw == '*') {
-                offset += ' + (100% - (' + cssFixedHeight + '))';
-                option.css.length = 'calc(100% - (' + cssFixedHeight + '))';
+                offset += ' + (100% - (' + cssFixedLength + '))';
+                option.css.length = 'calc(100% - (' + cssFixedLength + '))';
             } else if (option.unit == 'px' || option.unit == '%') {
                 offset += ' + ' + option.length + option.unit;
                 option.css.length = 'calc(' + option.length + option.unit + ')';
             } else if (option.unit == '%*') {
-                offset += ' + (100% - (' + cssFixedHeight + ')) * ' + option.length + ' / 100';
-                option.css.length = 'calc((100% - (' + cssFixedHeight + ')) * ' + option.length + ' / 100)';
+                offset += ' + (100% - (' + cssFixedLength + ')) * ' + option.length + ' / 100';
+                option.css.length = 'calc((100% - (' + cssFixedLength + ')) * ' + option.length + ' / 100)';
             }
         }
 
@@ -214,7 +233,7 @@ export function attach(root) {
             continue;
         }
 
-        switch (item[0]['kLayouter-type']) {
+        switch (item.attr('kLayouter-type')) {
             case 'vertical':
                 item[0]['kLayouter-item'] = new Stack(item, 'vertical');
                 break;

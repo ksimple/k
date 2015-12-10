@@ -72,7 +72,7 @@ export function attach(root) {
             continue;
         }
 
-        switch (item[0]['kLayouter-type']) {
+        switch (item.attr('kLayouter-type')) {
             case 'vertical':
                 item[0]['kLayouter-item'] = new Stack(item, 'vertical');
                 break;

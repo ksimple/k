@@ -3,6 +3,9 @@ import $ = require('jquery');
 var _DEBUG = 0;
 
 
+var _DEBUG = 1;
+
+
 export interface IDisposable {
     dispose();
 }

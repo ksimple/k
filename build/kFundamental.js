@@ -1,5 +1,6 @@
 define("kFundamental", ["require", "exports", 'jquery'], function (require, exports, $) {
     var _DEBUG = 0;
+    var _DEBUG = 1;
     /**
      * IDisposable interface
      * @interface k.fundamental.IDisposable

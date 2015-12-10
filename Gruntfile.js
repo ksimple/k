@@ -2,7 +2,10 @@
     require('load-grunt-tasks')(grunt);
     var projects = {
         kFundamental: {
-            debugHead: ['src/fundamental/head.p.ts'],
+            debugHead: [
+                'src/fundamental/head.p.ts',
+                'src/debug.p.ts',
+            ],
             shipHead: ['src/fundamental/head.p.ts'],
             tail: ['src/fundamental/tail.p.ts'],
             sources: [
@@ -14,7 +17,10 @@
             ],
         },
         kLayouter: {
-            debugHead: ['src/layouter/head.p.ts'],
+            debugHead: [
+                'src/layouter/head.p.ts',
+                'src/debug.p.ts',
+            ],
             shipHead: ['src/layouter/head.p.ts'],
             tail: ['src/layouter/tail.p.ts'],
             sources: [
