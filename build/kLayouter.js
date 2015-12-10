@@ -1,59 +1,79 @@
 define("kLayouter", ["require", "exports", 'kFundamental', 'jquery'], function (require, exports, fundamental, $) {
-    var Vertical = (function () {
-        function Vertical(element) {
+    var Stack = (function () {
+        function Stack(element, direction) {
             var _this = this;
+            this._direction = direction;
             this._element = element;
             this._className = 'kLayouter-' + getRandomSuffix();
             this._element.addClass(this._className);
+            if (this._direction == 'vertical') {
+                this._offsetName = 'top';
+                this._offsetName = 'top';
+                this._lengthName = 'height';
+                this._quadratureLengthName = 'width';
+            }
+            else {
+                this._offsetName = 'left';
+                this._lengthName = 'width';
+                this._quadratureLengthName = 'height';
+            }
             if (this._element[0].tagName == 'BODY') {
                 grabBody(true);
             }
             this.layout();
-            this._element.on('kLayouter.sizeChanged', function () { return _this._sizeChanged(); });
-            this._element.on('kLayouter.relayout', function () { return _this.layout(); });
+            this._element.on('kLayouter.sizeChanged', function (e) { return _this._sizeChanged(e); });
+            this._element.on('kLayouter.relayout', function (e) { return _this._relayout(e); });
         }
-        Vertical.prototype.layout = function () {
+        Stack.prototype.layout = function () {
             var elements = this._element.find('>div');
             var css = new fundamental.CssTextBuilder();
             var options = [];
             var cssFixedHeight = '';
             for (var index = 0; index < elements.length; index++) {
                 var element = elements.eq(index);
-                var raw = element.attr('kLayouter-height');
-                var _a = splitIntoNumberAndUnit(raw), height = _a[0], unit = _a[1];
+                var raw = element.attr('kLayouter-' + this._lengthName);
+                var _a = splitIntoNumberAndUnit(raw), length = _a[0], unit = _a[1];
                 var option = {
                     raw: raw,
                     index: index,
-                    height: height,
+                    length: length,
                     unit: unit,
                     css: {},
                 };
                 options.push(option);
                 if (raw == '?') {
-                    var realHeight = element.height();
-                    option.height = realHeight;
+                    var realHeight;
+                    if (this._direction == 'vertical') {
+                        realHeight = element[this._lengthName]();
+                    }
+                    else {
+                        element.css('display', 'inline-block');
+                        realHeight = element[this._lengthName]();
+                        element.css('display', '');
+                    }
+                    option.length = realHeight;
                     option.unit = 'px';
-                    cssFixedHeight += cssFixedHeight == '' ? option.height + option.unit : ' + ' + option.height + option.unit;
+                    cssFixedHeight += cssFixedHeight == '' ? option.length + option.unit : ' + ' + option.length + option.unit;
                 }
                 else if (unit == 'px' || unit == '%') {
-                    cssFixedHeight += cssFixedHeight == '' ? option.height + option.unit : ' + ' + option.height + option.unit;
+                    cssFixedHeight += cssFixedHeight == '' ? option.length + option.unit : ' + ' + option.length + option.unit;
                 }
             }
-            var top = '0px';
+            var offset = '0px';
             for (var index = 0; index < elements.length; index++) {
                 var option = options[index];
-                option.css.top = 'calc(' + top + ')';
+                option.css.offset = 'calc(' + offset + ')';
                 if (option.raw == '*') {
-                    top += ' + (100% - (' + cssFixedHeight + '))';
-                    option.css.height = 'calc(100% - (' + cssFixedHeight + '))';
+                    offset += ' + (100% - (' + cssFixedHeight + '))';
+                    option.css.length = 'calc(100% - (' + cssFixedHeight + '))';
                 }
                 else if (option.unit == 'px' || option.unit == '%') {
-                    top += ' + ' + option.height + option.unit;
-                    option.css.height = 'calc(' + option.height + option.unit + ')';
+                    offset += ' + ' + option.length + option.unit;
+                    option.css.length = 'calc(' + option.length + option.unit + ')';
                 }
                 else if (option.unit == '%*') {
-                    top += ' + (100% - (' + cssFixedHeight + ')) * ' + option.height + ' / 100';
-                    option.css.height = 'calc((100% - (' + cssFixedHeight + ')) * ' + option.height + ' / 100)';
+                    offset += ' + (100% - (' + cssFixedHeight + ')) * ' + option.length + ' / 100';
+                    option.css.length = 'calc((100% - (' + cssFixedHeight + ')) * ' + option.length + ' / 100)';
                 }
             }
             css.pushSelector('.' + this._className);
@@ -64,24 +84,33 @@ define("kLayouter", ["require", "exports", 'kFundamental', 'jquery'], function (
                 element.addClass(this._className + '-' + index);
                 css.pushSelector('.' + this._className + '>.' + this._className + '-' + index);
                 if (option.raw != '?') {
-                    css.property('height', option.css.height);
+                    css.property(this._lengthName, option.css.length);
                 }
-                css.property('top', option.css.top);
-                css.property('width', 100, '%');
+                css.property(this._offsetName, option.css.offset);
+                css.property(this._quadratureLengthName, 100, '%');
                 css.property('position', 'absolute');
             }
             setStyle(this._className, css.toString());
+            // FIXME: IE bug, unexpected scrollbar showing, so add this workaround here
+            if (1) {
+                element.css('overflow', 'hidden');
+            }
+            for (var index = 0; index < elements.length; index++) {
+                var element = elements.eq(index);
+                element.trigger('kLayouter.sizeChanged', { target: element[0] });
+            }
         };
-        Vertical.prototype._sizeChanged = function () {
-            this.layout();
+        Stack.prototype._sizeChanged = function (e) {
+            if (e.target == this._element[0]) {
+                this.layout();
+            }
         };
-        return Vertical;
-    })();
-    var Horizontal = (function () {
-        function Horizontal(element) {
-            this._element = element;
-        }
-        return Horizontal;
+        Stack.prototype._relayout = function (e) {
+            if (e.target == this._element[0]) {
+                this.layout();
+            }
+        };
+        return Stack;
     })();
     function getRandomSuffix() {
         return Math.floor(window.performance.now()) + '-' + Math.floor(Math.random() * 10000);
@@ -105,7 +134,7 @@ define("kLayouter", ["require", "exports", 'kFundamental', 'jquery'], function (
         dynamicStyle.content(text);
     }
     function onWindowSizeChanged() {
-        $(document.body).trigger('kLayouter.sizeChanged');
+        $(document.body).trigger('kLayouter.sizeChanged', { target: document.body });
     }
     function grabBody(grab) {
         if (grab) {
@@ -141,10 +170,10 @@ define("kLayouter", ["require", "exports", 'kFundamental', 'jquery'], function (
             }
             switch (item.attr('kLayouter-type')) {
                 case 'vertical':
-                    item.data('kl-item', new Vertical(item));
+                    item.data('kl-item', new Stack(item, 'vertical'));
                     break;
                 case 'horizontal':
-                    item.data('kl-item', new Horizontal(item));
+                    item.data('kl-item', new Stack(item, 'horizontal'));
                     break;
             }
         }

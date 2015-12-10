@@ -26,7 +26,7 @@ function setStyle(key, value?) {
 }
 
 function onWindowSizeChanged() {
-    $(document.body).trigger('kLayouter.sizeChanged');
+    $(document.body).trigger('kLayouter.sizeChanged', { target: document.body });
 }
 
 function grabBody(grab) {
@@ -70,11 +70,11 @@ export function attach(root) {
 
         switch (item.attr('kLayouter-type')) {
             case 'vertical':
-                item.data('kl-item', new Vertical(item));
+                item.data('kl-item', new Stack(item, 'vertical'));
                 break;
 
             case 'horizontal':
-                item.data('kl-item', new Horizontal(item));
+                item.data('kl-item', new Stack(item, 'horizontal'));
                 break;
         }
     }
