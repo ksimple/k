@@ -186,7 +186,13 @@ define("kFundamental", ["require", "exports", 'jquery'], function (require, expo
             if (id) {
                 this._element.attr('id', id);
             }
-            $(document.head).append(this._element);
+            // IE8 doesn't have document.head
+            if (document.head) {
+                $(document.head).append(this._element);
+            }
+            else {
+                $('head').append(this._element);
+            }
             this._stylesheetText = '';
             this.disposer = new Disposer(function () {
                 _this._element.remove();

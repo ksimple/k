@@ -1,5 +1,9 @@
 function getRandomSuffix() {
-    return Math.floor(window.performance.now()) + '-' + Math.floor(Math.random() * 10000);
+    if (window.performance && window.performance.now) {
+        return Math.floor(window.performance.now()) + '-' + Math.floor(Math.random() * 10000);
+    } else {
+        return (new Date()).valueOf() + '-' + Math.floor(Math.random() * 10000);
+    }
 }
 
 function splitIntoNumberAndUnit(value) {
@@ -64,17 +68,17 @@ export function attach(root) {
     for (var i = 0; i < items.length; i++) {
         var item = items.eq(i);
 
-        if (item.data('kl-item')) {
+        if (item[0]['kLayouter-item']) {
             continue;
         }
 
-        switch (item.attr('kLayouter-type')) {
+        switch (item[0]['kLayouter-type']) {
             case 'vertical':
-                item.data('kl-item', new Stack(item, 'vertical'));
+                item[0]['kLayouter-item'] = new Stack(item, 'vertical');
                 break;
 
             case 'horizontal':
-                item.data('kl-item', new Stack(item, 'horizontal'));
+                item[0]['kLayouter-item'] = new Stack(item, 'horizontal');
                 break;
         }
     }
