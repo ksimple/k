@@ -77,19 +77,11 @@ function attach(root) {
 
         switch (item.attr('kLayouter-type')) {
             case 'vertical':
-                if ((<any>$).browser.msie && (<any>$).browser.version < 9.0) {
-                    item[0]['kLayouter-item'] = new SelfCalculatedStack(item, 'vertical');
-                } else {
-                    item[0]['kLayouter-item'] = new Stack(item, 'vertical');
-                }
+                item[0]['kLayouter-item'] = new Stack(item, 'vertical');
                 break;
 
             case 'horizontal':
-                if ((<any>$).browser.msie && (<any>$).browser.version < 9.0) {
-                    item[0]['kLayouter-item'] = new SelfCalculatedStack(item, 'horizontal');
-                } else {
-                    item[0]['kLayouter-item'] = new Stack(item, 'horizontal');
-                }
+                item[0]['kLayouter-item'] = new Stack(item, 'horizontal');
                 break;
         }
     }

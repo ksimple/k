@@ -16,5 +16,6 @@ require.config({
 
 require(['jquery', 'kLayouter'], function($, layouter) {
     $(window).kLayouter();
+    $(document.body).css('visibility', '');
 });
 

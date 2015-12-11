@@ -25,7 +25,6 @@
             tail: ['src/layouter/tail.p.ts'],
             sources: [
                 'src/layouter/Stack.p.ts',
-                'src/layouter/SelfCalculatedStack.p.ts',
                 'src/layouter/Layouter.p.ts',
             ],
         },

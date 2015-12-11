@@ -25,6 +25,14 @@ define("kLayouter", ["require", "exports", 'kFundamental', 'jquery', "jquery.mig
         }
         Stack.prototype.layout = function (childSizeChanged) {
             if (childSizeChanged === void 0) { childSizeChanged = false; }
+            if ($.browser.msie && $.browser.version < 9.0) {
+                this._layoutByJavascript(childSizeChanged);
+            }
+            else {
+                this._layoutByCssCalc(childSizeChanged);
+            }
+        };
+        Stack.prototype._layoutByCssCalc = function (childSizeChanged) {
             var width = this._element.width();
             var height = this._element.height();
             var selfSizeChanged = this._width != width || this._height != height;
@@ -137,32 +145,7 @@ define("kLayouter", ["require", "exports", 'kFundamental', 'jquery', "jquery.mig
                 this._element.parent().kLayouter('layout', true);
             }
         };
-        return Stack;
-    })();
-    var SelfCalculatedStack = (function () {
-        function SelfCalculatedStack(element, direction) {
-            this._direction = direction;
-            this._element = element;
-            this._className = 'kLayouter-' + getRandomSuffix();
-            this._element.addClass(this._className);
-            if (this._direction == 'vertical') {
-                this._offsetName = 'top';
-                this._offsetName = 'top';
-                this._lengthName = 'height';
-                this._quadratureLengthName = 'width';
-            }
-            else {
-                this._offsetName = 'left';
-                this._lengthName = 'width';
-                this._quadratureLengthName = 'height';
-            }
-            if (this._element[0].tagName == 'BODY') {
-                grabBody(true);
-            }
-            this.layout(true);
-        }
-        SelfCalculatedStack.prototype.layout = function (childSizeChanged) {
-            if (childSizeChanged === void 0) { childSizeChanged = false; }
+        Stack.prototype._layoutByJavascript = function (childSizeChanged) {
             var width = this._element.width();
             var height = this._element.height();
             var selfSizeChanged = this._width != width || this._height != height;
@@ -297,7 +280,7 @@ define("kLayouter", ["require", "exports", 'kFundamental', 'jquery', "jquery.mig
                 this._element.parent().kLayouter('layout', true);
             }
         };
-        return SelfCalculatedStack;
+        return Stack;
     })();
     function getRandomSuffix() {
         if (window.performance && window.performance.now) {
@@ -364,20 +347,10 @@ define("kLayouter", ["require", "exports", 'kFundamental', 'jquery', "jquery.mig
             }
             switch (item.attr('kLayouter-type')) {
                 case 'vertical':
-                    if ($.browser.msie && $.browser.version < 9.0) {
-                        item[0]['kLayouter-item'] = new SelfCalculatedStack(item, 'vertical');
-                    }
-                    else {
-                        item[0]['kLayouter-item'] = new Stack(item, 'vertical');
-                    }
+                    item[0]['kLayouter-item'] = new Stack(item, 'vertical');
                     break;
                 case 'horizontal':
-                    if ($.browser.msie && $.browser.version < 9.0) {
-                        item[0]['kLayouter-item'] = new SelfCalculatedStack(item, 'horizontal');
-                    }
-                    else {
-                        item[0]['kLayouter-item'] = new Stack(item, 'horizontal');
-                    }
+                    item[0]['kLayouter-item'] = new Stack(item, 'horizontal');
                     break;
             }
         }

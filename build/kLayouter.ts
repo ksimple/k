@@ -45,6 +45,14 @@ class Stack {
     }
 
     public layout(childSizeChanged = false) {
+        if ((<any>$).browser.msie && (<any>$).browser.version < 9.0) {
+            this._layoutByJavascript(childSizeChanged);
+        } else {
+            this._layoutByCssCalc(childSizeChanged);
+        }
+    }
+
+    private _layoutByCssCalc(childSizeChanged) {
         var width = this._element.width();
         var height = this._element.height();
         var selfSizeChanged = this._width != width || this._height != height;
@@ -173,45 +181,8 @@ class Stack {
             (<any>this._element.parent()).kLayouter('layout', true);
         }
     }
-}
 
-
-class SelfCalculatedStack {
-    private _element;
-    private _className;
-    private _style;
-    private _direction;
-    private _offsetName;
-    private _lengthName;
-    private _quadratureLengthName;
-    private _width;
-    private _height;
-    private _lastChildOptions;
-
-    constructor(element, direction) {
-        this._direction = direction;
-
-        this._element = element;
-        this._className = 'kLayouter-' + getRandomSuffix();
-        this._element.addClass(this._className);
-
-        if (this._direction == 'vertical') {
-            this._offsetName = 'top';
-            this._offsetName = 'top';
-            this._lengthName = 'height';
-            this._quadratureLengthName = 'width';
-        } else {
-            this._offsetName = 'left';
-            this._lengthName = 'width';
-            this._quadratureLengthName = 'height';
-        }
-        if (this._element[0].tagName == 'BODY') {
-            grabBody(true);
-        }
-        this.layout(true);
-    }
-
-    public layout(childSizeChanged = false) {
+    private _layoutByJavascript(childSizeChanged) {
         var width = this._element.width();
         var height = this._element.height();
         var selfSizeChanged = this._width != width || this._height != height;
@@ -460,19 +431,11 @@ function attach(root) {
 
         switch (item.attr('kLayouter-type')) {
             case 'vertical':
-                if ((<any>$).browser.msie && (<any>$).browser.version < 9.0) {
-                    item[0]['kLayouter-item'] = new SelfCalculatedStack(item, 'vertical');
-                } else {
-                    item[0]['kLayouter-item'] = new Stack(item, 'vertical');
-                }
+                item[0]['kLayouter-item'] = new Stack(item, 'vertical');
                 break;
 
             case 'horizontal':
-                if ((<any>$).browser.msie && (<any>$).browser.version < 9.0) {
-                    item[0]['kLayouter-item'] = new SelfCalculatedStack(item, 'horizontal');
-                } else {
-                    item[0]['kLayouter-item'] = new Stack(item, 'horizontal');
-                }
+                item[0]['kLayouter-item'] = new Stack(item, 'horizontal');
                 break;
         }
     }
