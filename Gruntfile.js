@@ -16,16 +16,16 @@
                 'src/fundamental/DynamicStylesheet.p.ts',
             ],
         },
-        kLayouter: {
+        kUI: {
             debugHead: [
-                'src/layouter/head.p.ts',
+                'src/ui/head.p.ts',
                 'src/debug.p.ts',
             ],
-            shipHead: ['src/layouter/head.p.ts'],
-            tail: ['src/layouter/tail.p.ts'],
+            shipHead: ['src/ui/head.p.ts'],
+            tail: ['src/ui/tail.p.ts'],
             sources: [
-                'src/layouter/Stack.p.ts',
-                'src/layouter/Layouter.p.ts',
+                'src/ui/Stack.p.ts',
+                'src/ui/ui.p.ts',
             ],
         },
     };

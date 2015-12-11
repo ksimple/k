@@ -1,11 +1,11 @@
-define("kLayouter", ["require", "exports", 'kFundamental', 'jquery', "jquery.migrate"], function (require, exports, fundamental, $) {
+define("kUI", ["require", "exports", 'kFundamental', 'jquery', "jquery.migrate"], function (require, exports, fundamental, $) {
     var _DEBUG = 0;
     var _DEBUG = 1;
     var Stack = (function () {
         function Stack(element, direction) {
             this._direction = direction;
             this._element = element;
-            this._className = 'kLayouter-' + getRandomSuffix();
+            this._className = 'k-ui-stack-' + getRandomSuffix();
             this._element.addClass(this._className);
             if (this._direction == 'vertical') {
                 this._offsetName = 'top';
@@ -48,7 +48,7 @@ define("kLayouter", ["require", "exports", 'kFundamental', 'jquery', "jquery.mig
             var tempCssIsSet = false;
             for (var index = 0; index < elements.length; index++) {
                 var element = elements.eq(index);
-                var raw = element.attr('kLayouter-' + this._lengthName);
+                var raw = element.attr('k-ui-stack-' + this._lengthName);
                 var _a = splitIntoNumberAndUnit(raw), length = _a[0], unit = _a[1];
                 var option = {
                     raw: raw,
@@ -139,10 +139,10 @@ define("kLayouter", ["require", "exports", 'kFundamental', 'jquery', "jquery.mig
             this._lastChildOptions = JSON.stringify(options);
             for (var index = 0; index < elements.length; index++) {
                 var element = elements.eq(index);
-                element.kLayouter('layout');
+                element.k('layout');
             }
             if (this._element.parent() && selfSizeChanged) {
-                this._element.parent().kLayouter('layout', true);
+                this._element.parent().k('layout', true);
             }
         };
         Stack.prototype._layoutByJavascript = function (childSizeChanged) {
@@ -158,7 +158,7 @@ define("kLayouter", ["require", "exports", 'kFundamental', 'jquery', "jquery.mig
             var tempCssIsSet = false;
             for (var index = 0; index < elements.length; index++) {
                 var element = elements.eq(index);
-                var raw = element.attr('kLayouter-' + this._lengthName);
+                var raw = element.attr('k-ui-stack-' + this._lengthName);
                 var _a = splitIntoNumberAndUnit(raw), length = _a[0], unit = _a[1];
                 var option = {
                     raw: raw,
@@ -168,7 +168,7 @@ define("kLayouter", ["require", "exports", 'kFundamental', 'jquery', "jquery.mig
                 };
                 options.push(option);
                 if (raw != '?' && raw != '*' && unit != 'px' && unit != '%*' && unit != '%') {
-                    throw fundamental.createError(0, 'kLayouter', 'Unsupported unit ' + option.raw);
+                    throw fundamental.createError(0, 'k.ui.Stack', 'Unsupported unit ' + option.raw);
                 }
                 if (raw == '?') {
                     if (!tempCssIsSet) {
@@ -274,10 +274,10 @@ define("kLayouter", ["require", "exports", 'kFundamental', 'jquery', "jquery.mig
             this._lastChildOptions = JSON.stringify(options);
             for (var index = 0; index < elements.length; index++) {
                 var element = elements.eq(index);
-                element.kLayouter('layout');
+                element.k('layout');
             }
             if (this._element.parent() && selfSizeChanged) {
-                this._element.parent().kLayouter('layout', true);
+                this._element.parent().k('layout', true);
             }
         };
         return Stack;
@@ -296,7 +296,7 @@ define("kLayouter", ["require", "exports", 'kFundamental', 'jquery', "jquery.mig
         return [length, unit];
     }
     var styles = {};
-    var dynamicStyle = new fundamental.DynamicStylesheet('kLayouter-' + getRandomSuffix());
+    var dynamicStyle = new fundamental.DynamicStylesheet('k-' + getRandomSuffix());
     function setStyle(key, value) {
         if (value) {
             styles[key] = value;
@@ -311,7 +311,7 @@ define("kLayouter", ["require", "exports", 'kFundamental', 'jquery', "jquery.mig
         dynamicStyle.content(text);
     }
     function onWindowSizeChanged() {
-        $(document.body).kLayouter('layout');
+        $(document.body).k('layout');
     }
     function grabBody(grab) {
         if (grab) {
@@ -336,27 +336,24 @@ define("kLayouter", ["require", "exports", 'kFundamental', 'jquery', "jquery.mig
         if (root[0] == window) {
             root = $(document.body);
         }
-        var items = root.find('[kLayouter-type]');
-        if (root.attr('kLayouter-type')) {
+        var items = root.find('[k-type]');
+        if (root.attr('k-type')) {
             items = $(root).add(items);
         }
         for (var i = 0; i < items.length; i++) {
             var item = items.eq(i);
-            if (item[0]['kLayouter-item']) {
+            if (item[0]['k-item']) {
                 continue;
             }
-            switch (item.attr('kLayouter-type')) {
-                case 'vertical':
-                    item[0]['kLayouter-item'] = new Stack(item, 'vertical');
-                    break;
-                case 'horizontal':
-                    item[0]['kLayouter-item'] = new Stack(item, 'horizontal');
+            switch (item.attr('k-type')) {
+                case 'stack':
+                    item[0]['k-item'] = new Stack(item, item.attr('k-options'));
                     break;
             }
         }
     }
     $.fn.extend({
-        kLayouter: function (name) {
+        k: function (name) {
             var args = [];
             for (var _i = 1; _i < arguments.length; _i++) {
                 args[_i - 1] = arguments[_i];
@@ -370,7 +367,7 @@ define("kLayouter", ["require", "exports", 'kFundamental', 'jquery', "jquery.mig
                 switch (name) {
                     case 'layout':
                         for (var i = 0; i < this.length; i++) {
-                            var layouter = this[i]['kLayouter-item'];
+                            var layouter = this[i]['k-item'];
                             if (layouter) {
                                 if (typeof (args[0]) != 'undefined') {
                                     layouter.layout(args[0]);
@@ -386,4 +383,4 @@ define("kLayouter", ["require", "exports", 'kFundamental', 'jquery', "jquery.mig
         }
     });
 });
-//# sourceMappingURL=kLayouter.js.map
+//# sourceMappingURL=kUI.js.map

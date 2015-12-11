@@ -14,7 +14,7 @@ function splitIntoNumberAndUnit(value) {
 }
 
 var styles = {}
-var dynamicStyle = new fundamental.DynamicStylesheet('kLayouter-' + getRandomSuffix());
+var dynamicStyle = new fundamental.DynamicStylesheet('k-' + getRandomSuffix());
 
 function setStyle(key, value?) {
     if (value) {
@@ -33,7 +33,7 @@ function setStyle(key, value?) {
 }
 
 function onWindowSizeChanged() {
-    (<any>$(document.body)).kLayouter('layout');
+    (<any>$(document.body)).k('layout');
 }
 
 function grabBody(grab) {
@@ -62,33 +62,29 @@ function attach(root) {
         root = $(document.body);
     }
 
-    var items = root.find('[kLayouter-type]');
+    var items = root.find('[k-type]');
 
-    if (root.attr('kLayouter-type')) {
+    if (root.attr('k-type')) {
         items = $(root).add(items);
     }
 
     for (var i = 0; i < items.length; i++) {
         var item = items.eq(i);
 
-        if (item[0]['kLayouter-item']) {
+        if (item[0]['k-item']) {
             continue;
         }
 
-        switch (item.attr('kLayouter-type')) {
-            case 'vertical':
-                item[0]['kLayouter-item'] = new Stack(item, 'vertical');
-                break;
-
-            case 'horizontal':
-                item[0]['kLayouter-item'] = new Stack(item, 'horizontal');
+        switch (item.attr('k-type')) {
+            case 'stack':
+                item[0]['k-item'] = new Stack(item, item.attr('k-options'));
                 break;
         }
     }
 }
 
 $.fn.extend({
-    kLayouter: function (name?, ...args) {
+    k: function (name?, ...args) {
         if (arguments.length == 0) {
             for (var i = 0; i < this.length; i++) {
                 attach(this.eq(i));
@@ -97,7 +93,7 @@ $.fn.extend({
             switch (name) {
                 case 'layout':
                     for (var i = 0; i < this.length; i++) {
-                        var layouter = this[i]['kLayouter-item'];
+                        var layouter = this[i]['k-item'];
 
                         if (layouter) {
                             if (typeof(args[0]) != 'undefined') {

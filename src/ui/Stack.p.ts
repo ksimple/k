@@ -14,7 +14,7 @@ class Stack {
         this._direction = direction;
 
         this._element = element;
-        this._className = 'kLayouter-' + getRandomSuffix();
+        this._className = 'k-ui-stack-' + getRandomSuffix();
         this._element.addClass(this._className);
 
         if (this._direction == 'vertical') {
@@ -60,7 +60,7 @@ class Stack {
 
         for (var index = 0; index < elements.length; index++) {
             var element = elements.eq(index);
-            var raw = element.attr('kLayouter-' + this._lengthName);
+            var raw = element.attr('k-ui-stack-' + this._lengthName);
             var [length, unit] = splitIntoNumberAndUnit(raw);
             var option: any = {
                 raw: raw,
@@ -163,11 +163,11 @@ class Stack {
 
         for (var index = 0; index < elements.length; index++) {
             var element = elements.eq(index);
-            (<any>element).kLayouter('layout');
+            (<any>element).k('layout');
         }
 
         if (this._element.parent() && selfSizeChanged) {
-            (<any>this._element.parent()).kLayouter('layout', true);
+            (<any>this._element.parent()).k('layout', true);
         }
     }
 
@@ -187,7 +187,7 @@ class Stack {
 
         for (var index = 0; index < elements.length; index++) {
             var element = elements.eq(index);
-            var raw = element.attr('kLayouter-' + this._lengthName);
+            var raw = element.attr('k-ui-stack-' + this._lengthName);
             var [length, unit] = splitIntoNumberAndUnit(raw);
             var option: any = {
                 raw: raw,
@@ -199,7 +199,7 @@ class Stack {
             options.push(option);
 
             if (raw != '?' && raw != '*' && unit != 'px' && unit != '%*' && unit != '%') {
-                throw fundamental.createError(0, 'kLayouter', 'Unsupported unit ' + option.raw);
+                throw fundamental.createError(0, 'k.ui.Stack', 'Unsupported unit ' + option.raw);
             }
 
             if (raw == '?') {
@@ -331,11 +331,11 @@ class Stack {
 
         for (var index = 0; index < elements.length; index++) {
             var element = elements.eq(index);
-            (<any>element).kLayouter('layout');
+            (<any>element).k('layout');
         }
 
         if (this._element.parent() && selfSizeChanged) {
-            (<any>this._element.parent()).kLayouter('layout', true);
+            (<any>this._element.parent()).k('layout', true);
         }
     }
 }

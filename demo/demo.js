@@ -14,8 +14,8 @@ require.config({
     }
 });
 
-require(['jquery', 'kLayouter'], function($, layouter) {
-    $(window).kLayouter();
+require(['jquery', 'kUI'], function($, ui) {
+    $(window).k();
     $(document.body).css('visibility', '');
 });
 

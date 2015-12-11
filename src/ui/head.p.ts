@@ -1,5 +1,5 @@
 ///<amd-dependency path="jquery.migrate" />
-/// <amd-module name="kLayouter"/>
+/// <amd-module name="kUI"/>
 import fundamental = require('kFundamental');
 import $ = require('jquery');
 
