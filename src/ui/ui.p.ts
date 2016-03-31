@@ -79,6 +79,10 @@ function attach(root) {
             case 'stack':
                 item[0]['k-item'] = new Stack(item, item.attr('k-options'));
                 break;
+
+            case 'layer':
+                item[0]['k-item'] = new Layer(item, item.attr('k-options'));
+                break;
         }
     }
 }
@@ -110,3 +114,9 @@ $.fn.extend({
     }
 });
 
+(<any>$).k = {
+    layoutReason: {
+        selfSizeChanged: 'selfSizeChanged',
+        childSizeChanged: 'childSizeChanged',
+    }
+};

@@ -22,15 +22,29 @@ define("kUI", ["require", "exports", 'kFundamental', 'jquery', "jquery.migrate"]
             if (this._element[0].tagName == 'BODY') {
                 grabBody(true);
             }
-            this.layout(true);
+            this.layout($.k.layoutReason.childSizeChanged);
         }
-        Stack.prototype.layout = function (childSizeChanged) {
-            if (childSizeChanged === void 0) { childSizeChanged = false; }
+        Stack.prototype.layout = function (reason) {
+            reason = reason || $.k.layoutReason.selfSizeChanged;
+            var width = this._element.width();
+            var height = this._element.height();
+            var selfSizeChanged = this._width != width || this._height != height;
+            var anythingChanged = false;
             if ($.browser.msie && $.browser.version < 9.0) {
-                this._layoutByJavascript(childSizeChanged);
+                anythingChanged = this._layoutByJavascript(reason == $.k.layoutReason.childSizeChanged);
             }
             else {
-                this._layoutByCssCalc(childSizeChanged);
+                anythingChanged = this._layoutByCssCalc(reason == $.k.layoutReason.childSizeChanged);
+            }
+            if (anythingChanged) {
+                var elements = this._element.find('>div');
+                for (var index = 0; index < elements.length; index++) {
+                    var element = elements.eq(index);
+                    element.k('layout');
+                }
+                if (this._element.parent() && selfSizeChanged) {
+                    this._element.parent().k('layout', $.k.layoutReason.childSizeChanged);
+                }
             }
         };
         Stack.prototype._layoutByCssCalc = function (childSizeChanged) {
@@ -38,7 +52,7 @@ define("kUI", ["require", "exports", 'kFundamental', 'jquery', "jquery.migrate"]
             var height = this._element.height();
             var selfSizeChanged = this._width != width || this._height != height;
             if (!childSizeChanged && selfSizeChanged) {
-                return;
+                return false;
             }
             var elements = this._element.find('>div');
             var css = new fundamental.CssTextBuilder();
@@ -112,14 +126,14 @@ define("kUI", ["require", "exports", 'kFundamental', 'jquery', "jquery.migrate"]
                     option.css.length = 'calc((100% - (' + cssFixedLength + ')) * ' + option.length + ' / 100)';
                 }
             }
-            if (JSON.stringify(options) == this._lastChildOptions && selfSizeChanged) {
-                return;
+            if (JSON.stringify(options) == this._lastChildrenOptions && selfSizeChanged) {
+                return false;
             }
             css.pushSelector('.' + this._classSelectorName);
             css.property('position', 'relative');
             css.property('min-' + this._lengthName, 'calc((' + cssFixedLengthWithoutPercentage + ') / ' + (100 - totalFixedPercentage) + ' * 100)');
             // FIXME: IE bug, unexpected scrollbar showing, so add this workaround here
-            if (1) {
+            if ($.browser.msie) {
                 css.property('overflow', 'hidden');
             }
             for (var index = 0; index < elements.length; index++) {
@@ -137,21 +151,15 @@ define("kUI", ["require", "exports", 'kFundamental', 'jquery', "jquery.migrate"]
             setStyle(this._classSelectorName, css.toString());
             this._width = this._element.width();
             this._height = this._element.height();
-            this._lastChildOptions = JSON.stringify(options);
-            for (var index = 0; index < elements.length; index++) {
-                var element = elements.eq(index);
-                element.k('layout');
-            }
-            if (this._element.parent() && selfSizeChanged) {
-                this._element.parent().k('layout', true);
-            }
+            this._lastChildrenOptions = JSON.stringify(options);
+            return true;
         };
         Stack.prototype._layoutByJavascript = function (childSizeChanged) {
             var width = this._element.width();
             var height = this._element.height();
             var selfSizeChanged = this._width != width || this._height != height;
             if (!childSizeChanged && !selfSizeChanged) {
-                return;
+                return false;
             }
             var elements = this._element.find('>div');
             var css = null;
@@ -196,8 +204,8 @@ define("kUI", ["require", "exports", 'kFundamental', 'jquery', "jquery.migrate"]
                     option.unit = 'px';
                 }
             }
-            if (JSON.stringify(options) == this._lastChildOptions && !selfSizeChanged) {
-                return;
+            if (JSON.stringify(options) == this._lastChildrenOptions && !selfSizeChanged) {
+                return false;
             }
             css = new fundamental.CssTextBuilder();
             css.pushSelector('.' + this._classSelectorName);
@@ -272,16 +280,37 @@ define("kUI", ["require", "exports", 'kFundamental', 'jquery', "jquery.migrate"]
             setStyle(this._classSelectorName, css.toString());
             this._width = this._element.width();
             this._height = this._element.height();
-            this._lastChildOptions = JSON.stringify(options);
+            this._lastChildrenOptions = JSON.stringify(options);
             for (var index = 0; index < elements.length; index++) {
                 var element = elements.eq(index);
                 element.k('layout');
             }
             if (this._element.parent() && selfSizeChanged) {
-                this._element.parent().k('layout', true);
+                this._element.parent().k('layout', $.k.layoutReason.childSizeChanged);
             }
+            return true;
         };
         return Stack;
+    })();
+    var Layer = (function () {
+        function Layer(element) {
+            var args = [];
+            for (var _i = 1; _i < arguments.length; _i++) {
+                args[_i - 1] = arguments[_i];
+            }
+            this._element = element;
+            this._classSelectorName = 'k-ui-layout-' + getRandomSuffix();
+            this._className = 'k-ui k-ui-layout ' + this._classSelectorName;
+            this._element.addClass(this._className);
+            if (this._element[0].tagName == 'BODY') {
+                grabBody(true);
+            }
+            this.layout(true);
+        }
+        Layer.prototype.layout = function (childSizeChanged) {
+            if (childSizeChanged === void 0) { childSizeChanged = false; }
+        };
+        return Layer;
     })();
     function getRandomSuffix() {
         if (window.performance && window.performance.now) {
@@ -350,6 +379,9 @@ define("kUI", ["require", "exports", 'kFundamental', 'jquery', "jquery.migrate"]
                 case 'stack':
                     item[0]['k-item'] = new Stack(item, item.attr('k-options'));
                     break;
+                case 'layer':
+                    item[0]['k-item'] = new Layer(item, item.attr('k-options'));
+                    break;
             }
         }
     }
@@ -383,5 +415,11 @@ define("kUI", ["require", "exports", 'kFundamental', 'jquery', "jquery.migrate"]
             }
         }
     });
+    $.k = {
+        layoutReason: {
+            selfSizeChanged: 'selfSizeChanged',
+            childSizeChanged: 'childSizeChanged',
+        }
+    };
 });
 //# sourceMappingURL=kUI.js.map

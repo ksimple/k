@@ -25,6 +25,7 @@
             tail: ['src/ui/tail.p.ts'],
             sources: [
                 'src/ui/Stack.p.ts',
+                'src/ui/Layer.p.ts',
                 'src/ui/ui.p.ts',
             ],
         },

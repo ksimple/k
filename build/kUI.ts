@@ -20,7 +20,7 @@ class Stack {
     private _quadratureLengthName;
     private _width;
     private _height;
-    private _lastChildOptions;
+    private _lastChildrenOptions;
 
     constructor(element, direction) {
         this._direction = direction;
@@ -43,14 +43,33 @@ class Stack {
         if (this._element[0].tagName == 'BODY') {
             grabBody(true);
         }
-        this.layout(true);
+        this.layout((<any>$).k.layoutReason.childSizeChanged);
     }
 
-    public layout(childSizeChanged = false) {
+    public layout(reason?) {
+        reason = reason || (<any>$).k.layoutReason.selfSizeChanged;
+        var width = this._element.width();
+        var height = this._element.height();
+        var selfSizeChanged = this._width != width || this._height != height;
+        var anythingChanged = false;
+
         if ((<any>$).browser.msie && (<any>$).browser.version < 9.0) {
-            this._layoutByJavascript(childSizeChanged);
+            anythingChanged = this._layoutByJavascript(reason == (<any>$).k.layoutReason.childSizeChanged);
         } else {
-            this._layoutByCssCalc(childSizeChanged);
+            anythingChanged = this._layoutByCssCalc(reason == (<any>$).k.layoutReason.childSizeChanged);
+        }
+
+        if (anythingChanged) {
+            var elements = this._element.find('>div');
+
+            for (var index = 0; index < elements.length; index++) {
+                var element = elements.eq(index);
+                (<any>element).k('layout');
+            }
+
+            if (this._element.parent() && selfSizeChanged) {
+                (<any>this._element.parent()).k('layout', (<any>$).k.layoutReason.childSizeChanged);
+            }
         }
     }
 
@@ -60,7 +79,7 @@ class Stack {
         var selfSizeChanged = this._width != width || this._height != height;
 
         if (!childSizeChanged && selfSizeChanged) {
-            return;
+            return false;
         }
 
         var elements = this._element.find('>div');
@@ -142,15 +161,15 @@ class Stack {
             }
         }
 
-        if (JSON.stringify(options) == this._lastChildOptions && selfSizeChanged) {
-            return;
+        if (JSON.stringify(options) == this._lastChildrenOptions && selfSizeChanged) {
+            return false;
         }
 
         css.pushSelector('.' + this._classSelectorName);
         css.property('position', 'relative');
         css.property('min-' + this._lengthName, 'calc((' + cssFixedLengthWithoutPercentage + ') / ' + (100 - totalFixedPercentage) + ' * 100)');
         // FIXME: IE bug, unexpected scrollbar showing, so add this workaround here
-        if (1) {
+        if ((<any>$).browser.msie) {
             css.property('overflow', 'hidden');
         }
 
@@ -172,16 +191,9 @@ class Stack {
 
         this._width = this._element.width();
         this._height = this._element.height();
-        this._lastChildOptions = JSON.stringify(options);
+        this._lastChildrenOptions = JSON.stringify(options);
 
-        for (var index = 0; index < elements.length; index++) {
-            var element = elements.eq(index);
-            (<any>element).k('layout');
-        }
-
-        if (this._element.parent() && selfSizeChanged) {
-            (<any>this._element.parent()).k('layout', true);
-        }
+        return true;
     }
 
     private _layoutByJavascript(childSizeChanged) {
@@ -190,7 +202,7 @@ class Stack {
         var selfSizeChanged = this._width != width || this._height != height;
 
         if (!childSizeChanged && !selfSizeChanged) {
-            return;
+            return false;
         }
 
         var elements = this._element.find('>div');
@@ -244,8 +256,8 @@ class Stack {
             }
         }
 
-        if (JSON.stringify(options) == this._lastChildOptions && !selfSizeChanged) {
-            return;
+        if (JSON.stringify(options) == this._lastChildrenOptions && !selfSizeChanged) {
+            return false;
         }
 
         css = new fundamental.CssTextBuilder();
@@ -340,7 +352,7 @@ class Stack {
 
         this._width = this._element.width();
         this._height = this._element.height();
-        this._lastChildOptions = JSON.stringify(options);
+        this._lastChildrenOptions = JSON.stringify(options);
 
         for (var index = 0; index < elements.length; index++) {
             var element = elements.eq(index);
@@ -348,8 +360,32 @@ class Stack {
         }
 
         if (this._element.parent() && selfSizeChanged) {
-            (<any>this._element.parent()).k('layout', true);
+            (<any>this._element.parent()).k('layout', (<any>$).k.layoutReason.childSizeChanged);
         }
+
+        return true;
+    }
+}
+
+
+class Layer {
+    private _element;
+    private _className;
+    private _classSelectorName;
+
+    constructor(element, ...args) {
+        this._element = element;
+        this._classSelectorName = 'k-ui-layout-' + getRandomSuffix();
+        this._className = 'k-ui k-ui-layout ' + this._classSelectorName;
+        this._element.addClass(this._className);
+
+        if (this._element[0].tagName == 'BODY') {
+            grabBody(true);
+        }
+        this.layout(true);
+    }
+
+    public layout(childSizeChanged = false) {
     }
 }
 
@@ -435,6 +471,10 @@ function attach(root) {
             case 'stack':
                 item[0]['k-item'] = new Stack(item, item.attr('k-options'));
                 break;
+
+            case 'layer':
+                item[0]['k-item'] = new Layer(item, item.attr('k-options'));
+                break;
         }
     }
 }
@@ -466,5 +506,11 @@ $.fn.extend({
     }
 });
 
+(<any>$).k = {
+    layoutReason: {
+        selfSizeChanged: 'selfSizeChanged',
+        childSizeChanged: 'childSizeChanged',
+    }
+};
 
 
