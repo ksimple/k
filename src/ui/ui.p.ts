@@ -58,7 +58,7 @@ function grabBody(grab) {
 function attach(root) {
     root = $(root).eq(0);
 
-    if (root[0] == window) {
+    if (root[0] == window || root[0] == document) {
         root = $(document.body);
     }
 
@@ -90,20 +90,21 @@ $.fn.extend({
                 attach(this.eq(i));
             }
         } else {
-            switch (name) {
-                case 'layout':
-                    for (var i = 0; i < this.length; i++) {
-                        var layouter = this[i]['k-item'];
+            for (var i = 0; i < this.length; i++) {
+                if (this.eq(i).attr('k-type')) {
+                    var item = this[i]['k-item'];
 
-                        if (layouter) {
-                            if (typeof(args[0]) != 'undefined') {
-                                layouter.layout(args[0]);
-                            } else {
-                                layouter.layout();
-                            }
-                        }
+                    if (!item) {
+                        continue;
                     }
-                    break;
+
+                    if (typeof(item[name]) == 'function') {
+                        item[name].apply(item, args);
+                    } else {
+                        console.warn('method ' + name + ' doesn\'t exist on the kItem with type ' + this.eq(i).attr('k-type'));
+                    }
+                }
+                break;
             }
         }
     }

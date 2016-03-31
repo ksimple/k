@@ -12,6 +12,7 @@ var _DEBUG = 1;
 class Stack {
     private _element;
     private _className;
+    private _classSelectorName;
     private _style;
     private _direction;
     private _offsetName;
@@ -25,7 +26,8 @@ class Stack {
         this._direction = direction;
 
         this._element = element;
-        this._className = 'k-ui-stack-' + getRandomSuffix();
+        this._classSelectorName = 'k-ui-stack-' + getRandomSuffix();
+        this._className = 'k-ui k-ui-stack ' + this._classSelectorName;
         this._element.addClass(this._className);
 
         if (this._direction == 'vertical') {
@@ -87,11 +89,11 @@ class Stack {
                 if (!tempCssIsSet) {
                     var tempCss = new fundamental.CssTextBuilder();
 
-                    tempCss.pushSelector('.' + this._className);
+                    tempCss.pushSelector('.' + this._classSelectorName);
                     tempCss.property('position', 'relative');
-                    tempCss.pushSelector('.' + this._className + '>*');
+                    tempCss.pushSelector('.' + this._classSelectorName + '>*');
                     tempCss.property('position', 'absolute');
-                    setStyle(this._className, tempCss.toString());
+                    setStyle(this._classSelectorName, tempCss.toString());
                     tempCssIsSet = true;
                 }
 
@@ -144,7 +146,7 @@ class Stack {
             return;
         }
 
-        css.pushSelector('.' + this._className);
+        css.pushSelector('.' + this._classSelectorName);
         css.property('position', 'relative');
         css.property('min-' + this._lengthName, 'calc((' + cssFixedLengthWithoutPercentage + ') / ' + (100 - totalFixedPercentage) + ' * 100)');
         // FIXME: IE bug, unexpected scrollbar showing, so add this workaround here
@@ -157,7 +159,7 @@ class Stack {
             var option = options[index];
 
             element.addClass(this._className + '-' + index);
-            css.pushSelector('.' + this._className + '>.' + this._className + '-' + index);
+            css.pushSelector('.' + this._classSelectorName + '>.' + this._classSelectorName + '-' + index);
             if (option.raw != '?') {
                 css.property(this._lengthName, option.css.length);
             }
@@ -166,7 +168,7 @@ class Stack {
             css.property('position', 'absolute');
         }
 
-        setStyle(this._className, css.toString());
+        setStyle(this._classSelectorName, css.toString());
 
         this._width = this._element.width();
         this._height = this._element.height();
@@ -217,11 +219,11 @@ class Stack {
                 if (!tempCssIsSet) {
                     css = new fundamental.CssTextBuilder();
 
-                    css.pushSelector('.' + this._className);
+                    css.pushSelector('.' + this._classSelectorName);
                     css.property('position', 'relative');
-                    css.pushSelector('.' + this._className + '>*');
+                    css.pushSelector('.' + this._classSelectorName + '>*');
                     css.property('position', 'absolute');
-                    setStyle(this._className, css.toString());
+                    setStyle(this._classSelectorName, css.toString());
                     tempCssIsSet = true;
                 }
 
@@ -247,7 +249,7 @@ class Stack {
         }
 
         css = new fundamental.CssTextBuilder();
-        css.pushSelector('.' + this._className);
+        css.pushSelector('.' + this._classSelectorName);
         css.property('position', 'relative');
         // FIXME: IE bug, unexpected scrollbar showing, so add this workaround here
         if (1) {
@@ -258,13 +260,13 @@ class Stack {
             var element = elements.eq(index);
             var option = options[index];
 
-            element.addClass(this._className + '-' + index);
+            element.addClass(this._classSelectorName + '-' + index);
 
             if (option.unit != 'px' && option.unit != '%') {
                 continue;
             }
 
-            css.pushSelector('.' + this._className + '>.' + this._className + '-' + index);
+            css.pushSelector('.' + this._classSelectorName + '>.' + this._classSelectorName + '-' + index);
             if (option.raw != '?') {
                 css.property(this._lengthName, option.length, option.unit);
             }
@@ -272,7 +274,7 @@ class Stack {
             css.property('position', 'absolute');
         }
 
-        setStyle(this._className, css.toString());
+        setStyle(this._classSelectorName, css.toString());
 
         var totalFixedLength = 0;
         var totalLength = this._element[this._lengthName]();
@@ -314,7 +316,7 @@ class Stack {
         }
 
         css = new fundamental.CssTextBuilder();
-        css.pushSelector('.' + this._className);
+        css.pushSelector('.' + this._classSelectorName);
         css.property('position', 'relative');
         // FIXME: IE bug, unexpected scrollbar showing, so add this workaround here
         if (1) {
@@ -325,7 +327,7 @@ class Stack {
             var option = options[index];
 
 
-            css.pushSelector('.' + this._className + '>.' + this._className + '-' + index);
+            css.pushSelector('.' + this._classSelectorName + '>.' + this._classSelectorName + '-' + index);
             if (option.raw != '?') {
                 css.property(this._lengthName, option.length, option.unit);
             }
@@ -334,7 +336,7 @@ class Stack {
             css.property('position', 'absolute');
         }
 
-        setStyle(this._className, css.toString());
+        setStyle(this._classSelectorName, css.toString());
 
         this._width = this._element.width();
         this._height = this._element.height();
@@ -412,7 +414,7 @@ function grabBody(grab) {
 function attach(root) {
     root = $(root).eq(0);
 
-    if (root[0] == window) {
+    if (root[0] == window || root[0] == document) {
         root = $(document.body);
     }
 
@@ -444,20 +446,21 @@ $.fn.extend({
                 attach(this.eq(i));
             }
         } else {
-            switch (name) {
-                case 'layout':
-                    for (var i = 0; i < this.length; i++) {
-                        var layouter = this[i]['k-item'];
+            for (var i = 0; i < this.length; i++) {
+                if (this.eq(i).attr('k-type')) {
+                    var item = this[i]['k-item'];
 
-                        if (layouter) {
-                            if (typeof(args[0]) != 'undefined') {
-                                layouter.layout(args[0]);
-                            } else {
-                                layouter.layout();
-                            }
-                        }
+                    if (!item) {
+                        continue;
                     }
-                    break;
+
+                    if (typeof(item[name]) == 'function') {
+                        item[name].apply(item, args);
+                    } else {
+                        console.warn('method ' + name + ' doesn\'t exist on the kItem with type ' + this.eq(i).attr('k-type'));
+                    }
+                }
+                break;
             }
         }
     }
