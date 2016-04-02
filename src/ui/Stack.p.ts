@@ -32,20 +32,19 @@ class Stack {
         if (this._element[0].tagName == 'BODY') {
             grabBody(true);
         }
-        this.layout((<any>$).k.layoutReason.childSizeChanged);
+        this.layout();
     }
 
-    public layout(reason?) {
-        reason = reason || (<any>$).k.layoutReason.selfSizeChanged;
+    public layout() {
         var width = this._element.width();
         var height = this._element.height();
         var selfSizeChanged = this._width != width || this._height != height;
         var anythingChanged = false;
 
         if ((<any>$).browser.msie && (<any>$).browser.version < 9.0) {
-            anythingChanged = this._layoutByJavascript(reason == (<any>$).k.layoutReason.childSizeChanged);
+            anythingChanged = this._layoutByJavascript();
         } else {
-            anythingChanged = this._layoutByCssCalc(reason == (<any>$).k.layoutReason.childSizeChanged);
+            anythingChanged = this._layoutByCssCalc();
         }
 
         if (anythingChanged) {
@@ -55,19 +54,17 @@ class Stack {
                 var element = elements.eq(index);
                 (<any>element).k('layout');
             }
-
-            if (this._element.parent() && selfSizeChanged) {
-                (<any>this._element.parent()).k('layout', (<any>$).k.layoutReason.childSizeChanged);
-            }
         }
+
+        return true;
     }
 
-    private _layoutByCssCalc(childSizeChanged) {
+    private _layoutByCssCalc() {
         var width = this._element.width();
         var height = this._element.height();
         var selfSizeChanged = this._width != width || this._height != height;
 
-        if (!childSizeChanged && selfSizeChanged) {
+        if (!selfSizeChanged) {
             return false;
         }
 
@@ -185,12 +182,12 @@ class Stack {
         return true;
     }
 
-    private _layoutByJavascript(childSizeChanged) {
+    private _layoutByJavascript() {
         var width = this._element.width();
         var height = this._element.height();
         var selfSizeChanged = this._width != width || this._height != height;
 
-        if (!childSizeChanged && !selfSizeChanged) {
+        if (!selfSizeChanged) {
             return false;
         }
 
@@ -342,15 +339,6 @@ class Stack {
         this._width = this._element.width();
         this._height = this._element.height();
         this._lastChildrenOptions = JSON.stringify(options);
-
-        for (var index = 0; index < elements.length; index++) {
-            var element = elements.eq(index);
-            (<any>element).k('layout');
-        }
-
-        if (this._element.parent() && selfSizeChanged) {
-            (<any>this._element.parent()).k('layout', (<any>$).k.layoutReason.childSizeChanged);
-        }
 
         return true;
     }

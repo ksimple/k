@@ -17,5 +17,16 @@ require.config({
 require(['jquery', 'kUI'], function($, ui) {
     $(window).k();
     $(document.body).css('visibility', '');
+    var showingLayerIndex = 0;
+
+    $('#layer').click(function () {
+        $('#layer').k('hide')
+        $('#layer').k('show', showingLayerIndex);
+        showingLayerIndex++;
+
+        if (showingLayerIndex >= 3) {
+            showingLayerIndex = 0;
+        }
+    });
 });
 

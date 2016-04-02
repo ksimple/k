@@ -13,8 +13,22 @@ function splitIntoNumberAndUnit(value) {
     return [length, unit];
 }
 
-var styles = {}
+var styles = {
+    'k-relative': '{ position: relative; }',
+    'k-full': '{ position: absolute; top: 0px; bottom: 0px; left: 0px; right: 0px }',
+}
+
 var dynamicStyle = new fundamental.DynamicStylesheet('k-' + getRandomSuffix());
+
+(function () {
+    var text = '';
+
+    for (var key in styles) {
+        text += styles[key];
+    }
+
+    dynamicStyle.content(text);
+})();
 
 function setStyle(key, value?) {
     if (value) {
@@ -114,9 +128,3 @@ $.fn.extend({
     }
 });
 
-(<any>$).k = {
-    layoutReason: {
-        selfSizeChanged: 'selfSizeChanged',
-        childSizeChanged: 'childSizeChanged',
-    }
-};

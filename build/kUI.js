@@ -22,19 +22,18 @@ define("kUI", ["require", "exports", 'kFundamental', 'jquery', "jquery.migrate"]
             if (this._element[0].tagName == 'BODY') {
                 grabBody(true);
             }
-            this.layout($.k.layoutReason.childSizeChanged);
+            this.layout();
         }
-        Stack.prototype.layout = function (reason) {
-            reason = reason || $.k.layoutReason.selfSizeChanged;
+        Stack.prototype.layout = function () {
             var width = this._element.width();
             var height = this._element.height();
             var selfSizeChanged = this._width != width || this._height != height;
             var anythingChanged = false;
             if ($.browser.msie && $.browser.version < 9.0) {
-                anythingChanged = this._layoutByJavascript(reason == $.k.layoutReason.childSizeChanged);
+                anythingChanged = this._layoutByJavascript();
             }
             else {
-                anythingChanged = this._layoutByCssCalc(reason == $.k.layoutReason.childSizeChanged);
+                anythingChanged = this._layoutByCssCalc();
             }
             if (anythingChanged) {
                 var elements = this._element.find('>div');
@@ -42,16 +41,14 @@ define("kUI", ["require", "exports", 'kFundamental', 'jquery', "jquery.migrate"]
                     var element = elements.eq(index);
                     element.k('layout');
                 }
-                if (this._element.parent() && selfSizeChanged) {
-                    this._element.parent().k('layout', $.k.layoutReason.childSizeChanged);
-                }
             }
+            return true;
         };
-        Stack.prototype._layoutByCssCalc = function (childSizeChanged) {
+        Stack.prototype._layoutByCssCalc = function () {
             var width = this._element.width();
             var height = this._element.height();
             var selfSizeChanged = this._width != width || this._height != height;
-            if (!childSizeChanged && selfSizeChanged) {
+            if (!selfSizeChanged) {
                 return false;
             }
             var elements = this._element.find('>div');
@@ -154,11 +151,11 @@ define("kUI", ["require", "exports", 'kFundamental', 'jquery', "jquery.migrate"]
             this._lastChildrenOptions = JSON.stringify(options);
             return true;
         };
-        Stack.prototype._layoutByJavascript = function (childSizeChanged) {
+        Stack.prototype._layoutByJavascript = function () {
             var width = this._element.width();
             var height = this._element.height();
             var selfSizeChanged = this._width != width || this._height != height;
-            if (!childSizeChanged && !selfSizeChanged) {
+            if (!selfSizeChanged) {
                 return false;
             }
             var elements = this._element.find('>div');
@@ -281,13 +278,6 @@ define("kUI", ["require", "exports", 'kFundamental', 'jquery', "jquery.migrate"]
             this._width = this._element.width();
             this._height = this._element.height();
             this._lastChildrenOptions = JSON.stringify(options);
-            for (var index = 0; index < elements.length; index++) {
-                var element = elements.eq(index);
-                element.k('layout');
-            }
-            if (this._element.parent() && selfSizeChanged) {
-                this._element.parent().k('layout', $.k.layoutReason.childSizeChanged);
-            }
             return true;
         };
         return Stack;
@@ -305,10 +295,112 @@ define("kUI", ["require", "exports", 'kFundamental', 'jquery', "jquery.migrate"]
             if (this._element[0].tagName == 'BODY') {
                 grabBody(true);
             }
-            this.layout(true);
+            this._initialize();
         }
-        Layer.prototype.layout = function (childSizeChanged) {
-            if (childSizeChanged === void 0) { childSizeChanged = false; }
+        Layer.prototype.layout = function () {
+            var width = this._element.width();
+            var height = this._element.height();
+            var selfSizeChanged = this._width != width || this._height != height;
+            if (!selfSizeChanged) {
+                return false;
+            }
+            this._internalLayout();
+            var elements = this._element.find('>div');
+            for (var index = 0; index < elements.length; index++) {
+                var element = elements.eq(index);
+                element.k('layout');
+            }
+            return true;
+        };
+        Layer.prototype.add = function (name, index) {
+            if (index === void 0) { index = -1; }
+            var layer = {
+                name: name,
+                element: $('<div class="k-full"></div>'),
+            };
+            if (index < 0) {
+                index = this._layers.length + index + 1;
+            }
+            var element = this._layers[index].element;
+            this._layers.splice(index, 0, [layer]);
+            element.after(layer.element);
+        };
+        Layer.prototype.get = function (selector) {
+            if (typeof (selector) == 'number') {
+                return this._layers[selector] ? this._layers[selector].element : null;
+            }
+            else if (typeof (selector) == 'string') {
+                for (var i = 0; i < this._layers.length; i++) {
+                    if (this._layers[i].name == selector) {
+                        return this._layers[i].element;
+                    }
+                }
+            }
+            else if (typeof (selector) == 'function') {
+                for (var i = 0; i < this._layers.length; i++) {
+                    if (selector({ name: this._layers[i].name, element: this._layers[i] })) {
+                        return this._layers[i].element;
+                    }
+                }
+            }
+        };
+        Layer.prototype.getAll = function (selector) {
+            var result = [];
+            if (typeof (selector) == 'number') {
+                if (this._layers[selector]) {
+                    result.push(this._layers[selector].element[0]);
+                }
+            }
+            else if (typeof (selector) == 'string') {
+                for (var i = 0; i < this._layers.length; i++) {
+                    if (this._layers[i].name == selector) {
+                        result.push(this._layers[i].element[0]);
+                    }
+                }
+            }
+            else if (typeof (selector) == 'function') {
+                for (var i = 0; i < this._layers.length; i++) {
+                    if (selector({ name: this._layers[i].name, element: this._layers[i] })) {
+                        result.push(this._layers[i].element[0]);
+                    }
+                }
+            }
+            else if (typeof (selector) == 'undefined') {
+                for (var i = 0; i < this._layers.length; i++) {
+                    result.push(this._layers[i].element[0]);
+                }
+            }
+            return $(result);
+        };
+        Layer.prototype.show = function (indexOrNameOrPredictor) {
+            var layers = this.getAll(indexOrNameOrPredictor);
+            if (layers) {
+                layers.show();
+            }
+        };
+        Layer.prototype.hide = function (indexOrNameOrPredictor) {
+            var layers = this.getAll(indexOrNameOrPredictor);
+            if (layers) {
+                layers.hide();
+            }
+        };
+        Layer.prototype._initialize = function () {
+            this._layers = [];
+            var childElements = this._element.find('>div');
+            for (var i = 0; i < childElements.length; i++) {
+                var element = childElements.eq(i);
+                if (childElements.attr('k-ui-layer-name')) {
+                    element.addClass('k-full');
+                    var layer = {
+                        name: name,
+                        element: element,
+                    };
+                    this._layers.push(layer);
+                }
+            }
+        };
+        Layer.prototype._internalLayout = function () {
+            this._element.addClass('k-relative');
         };
         return Layer;
     })();
@@ -325,8 +417,18 @@ define("kUI", ["require", "exports", 'kFundamental', 'jquery', "jquery.migrate"]
         length = parseInt(length);
         return [length, unit];
     }
-    var styles = {};
+    var styles = {
+        'k-relative': '{ position: relative; }',
+        'k-full': '{ position: absolute; top: 0px; bottom: 0px; left: 0px; right: 0px }',
+    };
     var dynamicStyle = new fundamental.DynamicStylesheet('k-' + getRandomSuffix());
+    (function () {
+        var text = '';
+        for (var key in styles) {
+            text += styles[key];
+        }
+        dynamicStyle.content(text);
+    })();
     function setStyle(key, value) {
         if (value) {
             styles[key] = value;
@@ -415,11 +517,5 @@ define("kUI", ["require", "exports", 'kFundamental', 'jquery', "jquery.migrate"]
             }
         }
     });
-    $.k = {
-        layoutReason: {
-            selfSizeChanged: 'selfSizeChanged',
-            childSizeChanged: 'childSizeChanged',
-        }
-    };
 });
 //# sourceMappingURL=kUI.js.map
