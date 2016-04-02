@@ -416,8 +416,7 @@ define("kUI", ["require", "exports", 'kFundamental', 'jquery', "jquery.migrate"]
         return [length, unit];
     }
     var styles = {
-        'k-relative': '.k-relative { position: relative; }\n',
-        'k-full': '.k-full { position: absolute; top: 0px; bottom: 0px; left: 0px; right: 0px }\n',
+        'k-static': 'div.k-relative { position: relative; }\ndiv.k-full { position: absolute; top: 0px; bottom: 0px; left: 0px; right: 0px }\n',
     };
     var dynamicStyle = new fundamental.DynamicStylesheet('k-' + getRandomSuffix());
     (function () {
