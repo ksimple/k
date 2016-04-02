@@ -324,64 +324,43 @@ define("kUI", ["require", "exports", 'kFundamental', 'jquery', "jquery.migrate"]
             var element = this._layers[index].element;
             this._layers.splice(index, 0, [layer]);
             element.after(layer.element);
+            return layer.element;
         };
         Layer.prototype.get = function (selector) {
-            if (typeof (selector) == 'number') {
-                return this._layers[selector] ? this._layers[selector].element : null;
-            }
-            else if (typeof (selector) == 'string') {
-                for (var i = 0; i < this._layers.length; i++) {
-                    if (this._layers[i].name == selector) {
-                        return this._layers[i].element;
-                    }
-                }
-            }
-            else if (typeof (selector) == 'function') {
-                for (var i = 0; i < this._layers.length; i++) {
-                    if (selector({ name: this._layers[i].name, element: this._layers[i] })) {
-                        return this._layers[i].element;
-                    }
-                }
-            }
-        };
-        Layer.prototype.getAll = function (selector) {
             var result = [];
             if (typeof (selector) == 'number') {
                 if (this._layers[selector]) {
                     result.push(this._layers[selector].element[0]);
                 }
             }
-            else if (typeof (selector) == 'string') {
+            else if (typeof (selector) == 'string' || typeof (selector) == 'function' || typeof (selector) == 'undefined') {
                 for (var i = 0; i < this._layers.length; i++) {
-                    if (this._layers[i].name == selector) {
+                    if (this._checkIfMeetSelector(selector, i)) {
                         result.push(this._layers[i].element[0]);
                     }
-                }
-            }
-            else if (typeof (selector) == 'function') {
-                for (var i = 0; i < this._layers.length; i++) {
-                    if (selector({ name: this._layers[i].name, element: this._layers[i] })) {
-                        result.push(this._layers[i].element[0]);
-                    }
-                }
-            }
-            else if (typeof (selector) == 'undefined') {
-                for (var i = 0; i < this._layers.length; i++) {
-                    result.push(this._layers[i].element[0]);
                 }
             }
             return $(result);
         };
-        Layer.prototype.show = function (indexOrNameOrPredictor) {
-            var layers = this.getAll(indexOrNameOrPredictor);
-            if (layers) {
-                layers.show();
+        Layer.prototype.remove = function (selector) {
+            var remove = [];
+            if (typeof (selector) == 'number') {
+                if (this._layers[selector]) {
+                    var layer = this._layers[selector];
+                    this._layers.splice(selector, 1);
+                    layer.element.remove();
+                }
             }
-        };
-        Layer.prototype.hide = function (indexOrNameOrPredictor) {
-            var layers = this.getAll(indexOrNameOrPredictor);
-            if (layers) {
-                layers.hide();
+            else if (typeof (selector) == 'string' || typeof (selector) == 'function' || typeof (selector) == 'undefined') {
+                for (var i = 0; i < this._layers.length; i++) {
+                    if (this._checkIfMeetSelector(selector, i)) {
+                        remove.push({ index: i, element: this._layers[i].element[0] });
+                    }
+                }
+                for (var i = remove.length - 1; i >= 0; i--) {
+                    this._layers.splice(remove[i].index, 1);
+                    remove[i].element.remove();
+                }
             }
         };
         Layer.prototype._initialize = function () {
@@ -389,7 +368,8 @@ define("kUI", ["require", "exports", 'kFundamental', 'jquery', "jquery.migrate"]
             var childElements = this._element.find('>div');
             for (var i = 0; i < childElements.length; i++) {
                 var element = childElements.eq(i);
-                if (childElements.attr('k-ui-layer-name')) {
+                var name = element.attr('k-ui-layer-name');
+                if (name) {
                     element.addClass('k-full');
                     var layer = {
                         name: name,
@@ -401,6 +381,24 @@ define("kUI", ["require", "exports", 'kFundamental', 'jquery', "jquery.migrate"]
         };
         Layer.prototype._internalLayout = function () {
             this._element.addClass('k-relative');
+        };
+        Layer.prototype._checkIfMeetSelector = function (selector, index) {
+            var layer = this._layers[index];
+            if (typeof (selector) == 'number') {
+                return selector == index;
+            }
+            else if (typeof (selector) == 'string') {
+                return layer.name == selector;
+            }
+            else if (typeof (selector) == 'function') {
+                return selector({ name: layer.name, element: layer.element });
+            }
+            else if (typeof (selector) == 'undefined') {
+                return true;
+            }
+            else {
+                return new Error('Unsupported selector');
+            }
         };
         return Layer;
     })();
@@ -506,7 +504,7 @@ define("kUI", ["require", "exports", 'kFundamental', 'jquery', "jquery.migrate"]
                             continue;
                         }
                         if (typeof (item[name]) == 'function') {
-                            item[name].apply(item, args);
+                            return item[name].apply(item, args);
                         }
                         else {
                             console.warn('method ' + name + ' doesn\'t exist on the kItem with type ' + this.eq(i).attr('k-type'));

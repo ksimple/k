@@ -117,7 +117,7 @@ $.fn.extend({
                     }
 
                     if (typeof(item[name]) == 'function') {
-                        item[name].apply(item, args);
+                        return item[name].apply(item, args);
                     } else {
                         console.warn('method ' + name + ' doesn\'t exist on the kItem with type ' + this.eq(i).attr('k-type'));
                     }

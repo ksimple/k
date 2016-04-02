@@ -20,12 +20,16 @@ require(['jquery', 'kUI'], function($, ui) {
     var showingLayerIndex = 0;
 
     $('#layer').click(function () {
-        $('#layer').k('hide')
-        $('#layer').k('show', showingLayerIndex);
-        showingLayerIndex++;
+        if ($('#layer').k('get', 'remove').length > 0) {
+            $('#layer').k('remove', 'remove');
+        } else {
+            $('#layer').k('get').hide();
+            $('#layer').k('get', showingLayerIndex).show();
+            showingLayerIndex++;
 
-        if (showingLayerIndex >= 3) {
-            showingLayerIndex = 0;
+            if (showingLayerIndex >= 3) {
+                showingLayerIndex = 0;
+            }
         }
     });
 });
